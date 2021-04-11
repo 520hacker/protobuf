@@ -41,8 +41,8 @@
 #include <google/protobuf/type.pb.h>
 #include <google/protobuf/repeated_field.h>
 #include <google/protobuf/stubs/strutil.h>
-#include <google/protobuf/stubs/status.h>
 #include <google/protobuf/stubs/statusor.h>
+#include <google/protobuf/stubs/status.h>
 
 // Must be included last.
 #include <google/protobuf/port_def.inc>
@@ -82,8 +82,8 @@ PROTOBUF_EXPORT std::string GetStringOptionOrDefault(
 
 // Returns a boolean value contained in Any type.
 // TODO(skarvaje): Make these utilities dealing with Any types more generic,
-// add more error checking and move to a more public/sharable location so others
-// can use.
+// add more error checking and move to a more public/shareable location so
+// others can use.
 PROTOBUF_EXPORT bool GetBoolFromAny(const google::protobuf::Any& any);
 
 // Returns int64 value contained in Any type.

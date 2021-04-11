@@ -46,6 +46,7 @@
 #include <google/protobuf/util/internal/structured_objectwriter.h>
 #include <google/protobuf/util/type_resolver.h>
 #include <google/protobuf/stubs/bytestream.h>
+#include <google/protobuf/stubs/status.h>
 #include <google/protobuf/stubs/hash.h>
 #include <google/protobuf/stubs/status.h>
 
@@ -157,6 +158,11 @@ class PROTOBUF_EXPORT ProtoWriter : public StructuredObjectWriter {
 
   void set_case_insensitive_enum_parsing(bool case_insensitive_enum_parsing) {
     case_insensitive_enum_parsing_ = case_insensitive_enum_parsing;
+  }
+
+  void set_use_json_name_in_missing_fields(
+      bool use_json_name_in_missing_fields) {
+    use_json_name_in_missing_fields_ = use_json_name_in_missing_fields;
   }
 
  protected:
@@ -309,11 +315,11 @@ class PROTOBUF_EXPORT ProtoWriter : public StructuredObjectWriter {
  private:
   // Writes an ENUM field, including tag, to the stream.
   static util::Status WriteEnum(int field_number, const DataPiece& data,
-                                  const google::protobuf::Enum* enum_type,
-                                  io::CodedOutputStream* stream,
-                                  bool use_lower_camel_for_enums,
-                                  bool case_insensitive_enum_parsing,
-                                  bool ignore_unknown_values);
+                                const google::protobuf::Enum* enum_type,
+                                io::CodedOutputStream* stream,
+                                bool use_lower_camel_for_enums,
+                                bool case_insensitive_enum_parsing,
+                                bool ignore_unknown_values);
 
   // Variables for describing the structure of the input tree:
   // master_type_: descriptor for the whole protobuf message.
@@ -338,6 +344,9 @@ class PROTOBUF_EXPORT ProtoWriter : public StructuredObjectWriter {
 
   // If true, check if enum name in UPPER_CASE matches the field name.
   bool case_insensitive_enum_parsing_;
+
+  // If true, use the json name in missing fields errors.
+  bool use_json_name_in_missing_fields_;
 
   // Variable for internal state processing:
   // element_    : the current element.

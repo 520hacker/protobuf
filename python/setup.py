@@ -2,6 +2,7 @@
 #
 # See README for usage instructions.
 from distutils import util
+import fnmatch
 import glob
 import os
 import pkg_resources
@@ -144,6 +145,18 @@ class build_py(_build_py):
     # _build_py is an old-style class, so super() doesn't work.
     _build_py.run(self)
 
+  def find_package_modules(self, package, package_dir):
+    exclude = (
+        "*test*",
+        "google/protobuf/internal/*_pb2.py",
+        "google/protobuf/internal/_parameterized.py",
+        "google/protobuf/pyext/python_pb2.py",
+    )
+    modules = _build_py.find_package_modules(self, package, package_dir)
+    return [(pkg, mod, fil) for (pkg, mod, fil) in modules
+            if not any(fnmatch.fnmatchcase(fil, pat=pat) for pat in exclude)]
+
+
 class test_conformance(_build_py):
   target = 'test_python'
   def run(self):
@@ -194,7 +207,7 @@ if __name__ == '__main__':
     # C++ projects must now migrate to libc++ and are recommended to set a
     # deployment target of macOS 10.9 or later, or iOS 7 or later.
     if sys.platform == 'darwin':
-      mac_target = sysconfig.get_config_var('MACOSX_DEPLOYMENT_TARGET')
+      mac_target = str(sysconfig.get_config_var('MACOSX_DEPLOYMENT_TARGET'))
       if mac_target and (pkg_resources.parse_version(mac_target) <
                        pkg_resources.parse_version('10.9.0')):
         os.environ['MACOSX_DEPLOYMENT_TARGET'] = '10.9'
@@ -241,7 +254,7 @@ if __name__ == '__main__':
     os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'cpp'
 
   # Keep this list of dependencies in sync with tox.ini.
-  install_requires = ['six>=1.9', 'setuptools']
+  install_requires = ['six>=1.9']
   if sys.version_info <= (2,7):
     install_requires.append('ordereddict')
     install_requires.append('unittest2')
@@ -266,11 +279,14 @@ if __name__ == '__main__':
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         ],
       namespace_packages=['google'],
       packages=find_packages(
           exclude=[
               'import_test_package',
+              'protobuf_distutils',
           ],
       ),
       test_suite='google.protobuf.internal',

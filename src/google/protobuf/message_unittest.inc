@@ -48,7 +48,6 @@
 
 #include <google/protobuf/stubs/logging.h>
 #include <google/protobuf/stubs/common.h>
-#include <google/protobuf/stubs/logging.h>
 #include <google/protobuf/test_util2.h>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream.h>
@@ -59,6 +58,7 @@
 #include <google/protobuf/generated_message_reflection.h>
 #include <google/protobuf/testing/googletest.h>
 #include <gtest/gtest.h>
+#include <google/protobuf/stubs/logging.h>
 #include <google/protobuf/io/io_win32.h>
 
 
@@ -235,6 +235,10 @@ TEST(MESSAGE_TEST_NAME, DynamicCastToGenerated) {
                 test_all_types_pointer_const));
   EXPECT_EQ(nullptr, DynamicCastToGenerated<const UNITTEST::TestRequired>(
                          test_all_types_pointer_const));
+
+  Message* test_all_types_pointer_nullptr = nullptr;
+  EXPECT_EQ(nullptr, DynamicCastToGenerated<UNITTEST::TestAllTypes>(
+                         test_all_types_pointer_nullptr));
 }
 
 #ifdef PROTOBUF_HAS_DEATH_TEST  // death tests do not work on Windows yet.
@@ -546,6 +550,34 @@ TEST(MESSAGE_TEST_NAME, IsInitialized) {
   EXPECT_FALSE(msg.IsInitialized());
   sub_group->set_i(1);
   EXPECT_TRUE(msg.IsInitialized());
+}
+
+TEST(MESSAGE_TEST_NAME, IsInitializedSplitBytestream) {
+  UNITTEST::TestRequired ab, c;
+  ab.set_a(1);
+  ab.set_b(2);
+  c.set_c(3);
+
+  // The protobuf represented by the concatenated string has all required
+  // fields (a,b,c) set.
+  std::string bytes =
+      ab.SerializePartialAsString() + c.SerializePartialAsString();
+
+  UNITTEST::TestRequired concatenated;
+  EXPECT_TRUE(concatenated.ParsePartialFromString(bytes));
+  EXPECT_TRUE(concatenated.IsInitialized());
+
+  UNITTEST::TestRequiredForeign fab, fc;
+  fab.mutable_optional_message()->set_a(1);
+  fab.mutable_optional_message()->set_b(2);
+  fc.mutable_optional_message()->set_c(3);
+
+  bytes =
+      fab.SerializePartialAsString() + fc.SerializePartialAsString();
+
+  UNITTEST::TestRequiredForeign fconcatenated;
+  EXPECT_TRUE(fconcatenated.ParsePartialFromString(bytes));
+  EXPECT_TRUE(fconcatenated.IsInitialized());
 }
 
 TEST(MESSAGE_FACTORY_TEST_NAME, GeneratedFactoryLookup) {

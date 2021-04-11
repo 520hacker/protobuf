@@ -85,7 +85,7 @@ void SetPrimitiveVariables(const FieldDescriptor* descriptor,
       descriptor->options().deprecated() ? "@java.lang.Deprecated " : "";
   (*variables)["required"] = descriptor->is_required() ? "true" : "false";
 
-  if (SupportFieldPresence(descriptor)) {
+  if (HasHasbit(descriptor)) {
     // For singular messages and builders, one bit is used for the hasField bit.
     (*variables)["get_has_field_bit_message"] = GenerateGetBit(messageBitIndex);
 
@@ -127,7 +127,7 @@ ImmutableStringFieldLiteGenerator::ImmutableStringFieldLiteGenerator(
 ImmutableStringFieldLiteGenerator::~ImmutableStringFieldLiteGenerator() {}
 
 int ImmutableStringFieldLiteGenerator::GetNumBitsForMessage() const {
-  return SupportFieldPresence(descriptor_) ? 1 : 0;
+  return HasHasbit(descriptor_) ? 1 : 0;
 }
 
 // A note about how strings are handled. In the SPEED and CODE_SIZE runtimes,
@@ -157,7 +157,7 @@ int ImmutableStringFieldLiteGenerator::GetNumBitsForMessage() const {
 //     shouldn't be necessary or used on devices.
 void ImmutableStringFieldLiteGenerator::GenerateInterfaceMembers(
     io::Printer* printer) const {
-  if (SupportFieldPresence(descriptor_)) {
+  if (HasHazzer(descriptor_)) {
     WriteFieldAccessorDocComment(printer, descriptor_, HAZZER);
     printer->Print(variables_,
                    "$deprecation$boolean has$capitalized_name$();\n");
@@ -176,7 +176,7 @@ void ImmutableStringFieldLiteGenerator::GenerateMembers(
   printer->Print(variables_, "private java.lang.String $name$_;\n");
   PrintExtraFieldInfo(variables_, printer);
 
-  if (SupportFieldPresence(descriptor_)) {
+  if (HasHazzer(descriptor_)) {
     WriteFieldAccessorDocComment(printer, descriptor_, HAZZER);
     printer->Print(
         variables_,
@@ -238,7 +238,7 @@ void ImmutableStringFieldLiteGenerator::GenerateMembers(
 
 void ImmutableStringFieldLiteGenerator::GenerateBuilderMembers(
     io::Printer* printer) const {
-  if (SupportFieldPresence(descriptor_)) {
+  if (HasHazzer(descriptor_)) {
     WriteFieldAccessorDocComment(printer, descriptor_, HAZZER);
     printer->Print(
         variables_,
@@ -337,17 +337,14 @@ ImmutableStringOneofFieldLiteGenerator::
 void ImmutableStringOneofFieldLiteGenerator::GenerateMembers(
     io::Printer* printer) const {
   PrintExtraFieldInfo(variables_, printer);
-
-  if (SupportFieldPresence(descriptor_)) {
-    WriteFieldAccessorDocComment(printer, descriptor_, HAZZER);
-    printer->Print(
-        variables_,
-        "@java.lang.Override\n"
-        "$deprecation$public boolean ${$has$capitalized_name$$}$() {\n"
-        "  return $has_oneof_case_message$;\n"
-        "}\n");
-    printer->Annotate("{", "}", descriptor_);
-  }
+  GOOGLE_DCHECK(HasHazzer(descriptor_));
+  WriteFieldAccessorDocComment(printer, descriptor_, HAZZER);
+  printer->Print(variables_,
+                 "@java.lang.Override\n"
+                 "$deprecation$public boolean ${$has$capitalized_name$$}$() {\n"
+                 "  return $has_oneof_case_message$;\n"
+                 "}\n");
+  printer->Annotate("{", "}", descriptor_);
 
   WriteFieldAccessorDocComment(printer, descriptor_, GETTER);
   printer->Print(
@@ -418,16 +415,14 @@ void ImmutableStringOneofFieldLiteGenerator::GenerateFieldInfo(
 
 void ImmutableStringOneofFieldLiteGenerator::GenerateBuilderMembers(
     io::Printer* printer) const {
-  if (SupportFieldPresence(descriptor_)) {
-    WriteFieldAccessorDocComment(printer, descriptor_, HAZZER);
-    printer->Print(
-        variables_,
-        "@java.lang.Override\n"
-        "$deprecation$public boolean ${$has$capitalized_name$$}$() {\n"
-        "  return instance.has$capitalized_name$();\n"
-        "}\n");
-    printer->Annotate("{", "}", descriptor_);
-  }
+  GOOGLE_DCHECK(HasHazzer(descriptor_));
+  WriteFieldAccessorDocComment(printer, descriptor_, HAZZER);
+  printer->Print(variables_,
+                 "@java.lang.Override\n"
+                 "$deprecation$public boolean ${$has$capitalized_name$$}$() {\n"
+                 "  return instance.has$capitalized_name$();\n"
+                 "}\n");
+  printer->Annotate("{", "}", descriptor_);
 
   WriteFieldAccessorDocComment(printer, descriptor_, GETTER);
   printer->Print(

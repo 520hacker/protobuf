@@ -41,6 +41,7 @@
 
 #include <google/protobuf/stubs/stringprintf.h>
 #include <google/protobuf/compiler/java/java_name_resolver.h>
+#include <google/protobuf/compiler/java/java_names.h>
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/wire_format.h>
 #include <google/protobuf/stubs/strutil.h>
@@ -215,6 +216,7 @@ std::string UnderscoresToCamelCaseCheckReserved(const FieldDescriptor* field) {
   return name;
 }
 
+
 std::string UniqueFileScopeIdentifier(const Descriptor* descriptor) {
   return "static_" + StringReplace(descriptor->full_name(), ".", "_", true);
 }
@@ -225,14 +227,6 @@ std::string CamelCaseFieldName(const FieldDescriptor* field) {
     return '_' + fieldName;
   }
   return fieldName;
-}
-
-std::string StripProto(const std::string& filename) {
-  if (HasSuffixString(filename, ".protodevel")) {
-    return StripSuffixString(filename, ".protodevel");
-  } else {
-    return StripSuffixString(filename, ".proto");
-  }
 }
 
 std::string FileClassName(const FileDescriptor* file, bool immutable) {

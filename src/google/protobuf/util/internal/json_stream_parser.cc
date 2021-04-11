@@ -52,7 +52,6 @@ namespace util {
 
 // Allow these symbols to be referenced as util::Status, util::error::* in
 // this file.
-using util::Status;
 namespace error {
 using util::error::CANCELLED;
 using util::error::INTERNAL;
@@ -853,7 +852,7 @@ util::Status JsonStreamParser::ReportUnknown(StringPiece message) {
 util::Status JsonStreamParser::IncrementRecursionDepth(
     StringPiece key) const {
   if (++recursion_depth_ > max_recursion_depth_) {
-    return Status(
+    return util::Status(
         util::error::INVALID_ARGUMENT,
         StrCat("Message too deep. Max recursion depth reached for key '",
                      key, "'"));

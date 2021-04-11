@@ -223,7 +223,7 @@ public abstract class GeneratedMessageLite<
 
   /**
    * A method that implements different types of operations described in {@link MethodToInvoke}.
-   * Theses different kinds of operations are required to implement message-level operations for
+   * These different kinds of operations are required to implement message-level operations for
    * builders in the runtime. This method bundles those operations to reduce the generated methods
    * count.
    *
@@ -266,12 +266,14 @@ public abstract class GeneratedMessageLite<
     memoizedSerializedSize = size;
   }
 
+  @Override
   public void writeTo(CodedOutputStream output) throws IOException {
     Protobuf.getInstance()
         .schemaFor(this)
         .writeTo(this, CodedOutputStreamWriter.forCodedOutput(output));
   }
 
+  @Override
   public int getSerializedSize() {
     if (memoizedSerializedSize == -1) {
       memoizedSerializedSize = Protobuf.getInstance().schemaFor(this).getSerializedSize(this);

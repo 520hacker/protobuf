@@ -41,7 +41,7 @@ goog.require('proto.google.protobuf.Any');
 goog.require('proto.google.protobuf.Timestamp');
 // CommonJS-LoadFromFile: google/protobuf/struct_pb proto.google.protobuf
 goog.require('proto.google.protobuf.Struct');
-
+goog.require('jspb.Message');
 
 var BYTES = new Uint8Array([1, 2, 8, 9]);
 var BYTES_B64 = goog.crypt.base64.encodeByteArray(BYTES);
@@ -70,7 +70,6 @@ function bytesCompare(arr, expected) {
 
 
 describe('proto3Test', function() {
-
   /**
    * Test default values don't affect equality test.
    */
@@ -130,8 +129,8 @@ describe('proto3Test', function() {
     assertEquals(msg.getSingularBytes_asU8().length, 0);
     assertEquals(msg.getSingularBytes_asB64(), '');
 
-    assertEquals(msg.getSingularForeignEnum(),
-                 proto.jspb.test.Proto3Enum.PROTO3_FOO);
+    assertEquals(
+        msg.getSingularForeignEnum(), proto.jspb.test.Proto3Enum.PROTO3_FOO);
     assertEquals(msg.getSingularForeignMessage(), undefined);
     assertEquals(msg.getSingularForeignMessage(), undefined);
 
@@ -182,8 +181,8 @@ describe('proto3Test', function() {
     assertEquals(msg.getOptionalBytes_asU8().length, 0);
     assertEquals(msg.getOptionalBytes_asB64(), '');
 
-    assertEquals(msg.getOptionalForeignEnum(),
-                 proto.jspb.test.Proto3Enum.PROTO3_FOO);
+    assertEquals(
+        msg.getOptionalForeignEnum(), proto.jspb.test.Proto3Enum.PROTO3_FOO);
     assertEquals(msg.getOptionalForeignMessage(), undefined);
     assertEquals(msg.getOptionalForeignMessage(), undefined);
 
@@ -201,7 +200,7 @@ describe('proto3Test', function() {
     assertTrue(msg.hasOptionalInt64());
 
     assertFalse(msg.hasOptionalString());
-    msg.setOptionalString("");
+    msg.setOptionalString('');
     assertTrue(msg.hasOptionalString());
 
     // Now the proto will have a non-zero size, even though its values are 0.
@@ -224,7 +223,7 @@ describe('proto3Test', function() {
   /**
    * Test that all fields can be set ,and read via a serialization roundtrip.
    */
-  it('testProto3FieldSetGet', function () {
+  it('testProto3FieldSetGet', function() {
     var msg = new proto.jspb.test.TestProto3();
 
     msg.setSingularInt32(-42);
@@ -288,8 +287,8 @@ describe('proto3Test', function() {
     assertEquals(msg.getSingularString(), 'hello world');
     assertEquals(true, bytesCompare(msg.getSingularBytes(), BYTES));
     assertEquals(msg.getSingularForeignMessage().getC(), 16);
-    assertEquals(msg.getSingularForeignEnum(),
-        proto.jspb.test.Proto3Enum.PROTO3_BAR);
+    assertEquals(
+        msg.getSingularForeignEnum(), proto.jspb.test.Proto3Enum.PROTO3_BAR);
 
     assertElementsEquals(msg.getRepeatedInt32List(), [-42]);
     assertElementsEquals(msg.getRepeatedInt64List(), [-0x7fffffff00000000]);
@@ -309,7 +308,8 @@ describe('proto3Test', function() {
     assertEquals(true, bytesCompare(msg.getRepeatedBytesList()[0], BYTES));
     assertEquals(msg.getRepeatedForeignMessageList().length, 1);
     assertEquals(msg.getRepeatedForeignMessageList()[0].getC(), 1000);
-    assertElementsEquals(msg.getRepeatedForeignEnumList(),
+    assertElementsEquals(
+        msg.getRepeatedForeignEnumList(),
         [proto.jspb.test.Proto3Enum.PROTO3_BAR]);
 
     assertEquals(msg.getOneofString(), 'asdf');
@@ -374,7 +374,8 @@ describe('proto3Test', function() {
     assertEquals(msg.getOneofUint32(), 0);
     assertEquals(msg.getOneofForeignMessage(), undefined);
     assertEquals(msg.getOneofString(), '');
-    assertEquals(msg.getOneofBytes_asB64(),
+    assertEquals(
+        msg.getOneofBytes_asB64(),
         goog.crypt.base64.encodeString('\u00FF\u00FF'));
 
     assertFalse(msg.hasOneofUint32());
@@ -454,24 +455,24 @@ describe('proto3Test', function() {
 
   it('testStructWellKnownType', function() {
     var jsObj = {
-      abc: "def",
+      abc: 'def',
       number: 12345.678,
       nullKey: null,
       boolKey: true,
-      listKey: [1, null, true, false, "abc"],
-      structKey: {foo: "bar", somenum: 123},
-      complicatedKey: [{xyz: {abc: [3, 4, null, false]}}, "zzz"]
+      listKey: [1, null, true, false, 'abc'],
+      structKey: {foo: 'bar', somenum: 123},
+      complicatedKey: [{xyz: {abc: [3, 4, null, false]}}, 'zzz']
     };
 
     var struct = proto.google.protobuf.Struct.fromJavaScript(jsObj);
     var jsObj2 = struct.toJavaScript();
 
-    assertEquals("def", jsObj2.abc);
+    assertEquals('def', jsObj2.abc);
     assertEquals(12345.678, jsObj2.number);
     assertEquals(null, jsObj2.nullKey);
     assertEquals(true, jsObj2.boolKey);
-    assertEquals("abc", jsObj2.listKey[4]);
-    assertEquals("bar", jsObj2.structKey.foo);
+    assertEquals('abc', jsObj2.listKey[4]);
+    assertEquals('bar', jsObj2.structKey.foo);
     assertEquals(4, jsObj2.complicatedKey[0].xyz.abc[1]);
   });
 });

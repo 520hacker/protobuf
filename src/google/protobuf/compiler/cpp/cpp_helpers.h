@@ -134,6 +134,10 @@ inline std::string ClassName(const EnumDescriptor* descriptor, bool qualified) {
                    : ClassName(descriptor);
 }
 
+// Returns the extension name prefixed with the class name if nested but without
+// the package name.
+std::string ExtensionName(const FieldDescriptor* d);
+
 std::string QualifiedExtensionName(const FieldDescriptor* d,
                                    const Options& options);
 std::string QualifiedExtensionName(const FieldDescriptor* d);
@@ -204,9 +208,6 @@ inline const Descriptor* FieldScope(const FieldDescriptor* field) {
 // is just ClassName(field->message_type(), true);
 std::string FieldMessageTypeName(const FieldDescriptor* field,
                                  const Options& options);
-
-// Strips ".proto" or ".protodevel" from the end of a filename.
-PROTOC_EXPORT std::string StripProto(const std::string& filename);
 
 // Get the C++ type name for a primitive type (e.g. "double", "::google::protobuf::int32", etc.).
 const char* PrimitiveTypeName(FieldDescriptor::CppType type);
@@ -318,8 +319,6 @@ inline bool IsWeak(const FieldDescriptor* field, const Options& options) {
   return false;
 }
 
-bool IsStringInlined(const FieldDescriptor* descriptor, const Options& options);
-
 // For a string field, returns the effective ctype.  If the actual ctype is
 // not supported, returns the default of STRING.
 FieldOptions::CType EffectiveStringCType(const FieldDescriptor* field,
@@ -347,10 +346,14 @@ inline bool IsLazy(const FieldDescriptor* field, const Options& options) {
          !options.opensource_runtime;
 }
 
-// Returns true if "field" is used.
-inline bool IsFieldUsed(const FieldDescriptor* /*field*/,
-                        const Options& /*options*/) {
+inline bool IsFieldUsed(const FieldDescriptor* field, const Options& options) {
   return true;
+}
+
+// Returns true if "field" is stripped.
+inline bool IsFieldStripped(const FieldDescriptor* /*field*/,
+                            const Options& /*options*/) {
+  return false;
 }
 
 // Does the file contain any definitions that need extension_set.h?
@@ -406,14 +409,6 @@ inline bool IsProto2MessageSet(const Descriptor* descriptor,
          descriptor->full_name() == "google.protobuf.bridge.MessageSet";
 }
 
-inline bool IsProto2MessageSetFile(const FileDescriptor* file,
-                                   const Options& options) {
-  return !options.opensource_runtime &&
-         options.enforce_mode != EnforceOptimizeMode::kLiteRuntime &&
-         !options.lite_implicit_weak_fields &&
-         file->name() == "net/proto2/bridge/proto/message_set.proto";
-}
-
 inline bool IsMapEntryMessage(const Descriptor* descriptor) {
   return descriptor->options().map_entry();
 }
@@ -450,25 +445,9 @@ inline bool HasPreservingUnknownEnumSemantics(const FieldDescriptor* field) {
   return field->file()->syntax() == FileDescriptor::SYNTAX_PROTO3;
 }
 
-inline bool SupportsArenas(const FileDescriptor* file) {
-  return file->options().cc_enable_arenas();
-}
-
-inline bool SupportsArenas(const Descriptor* desc) {
-  return SupportsArenas(desc->file());
-}
-
-inline bool SupportsArenas(const FieldDescriptor* field) {
-  return SupportsArenas(field->file());
-}
-
 inline bool IsCrossFileMessage(const FieldDescriptor* field) {
   return field->type() == FieldDescriptor::TYPE_MESSAGE &&
          field->message_type()->file() != field->file();
-}
-
-inline std::string MessageCreateFunction(const Descriptor* d) {
-  return SupportsArenas(d) ? "CreateMessage" : "Create";
 }
 
 inline std::string MakeDefaultName(const FieldDescriptor* field) {
@@ -560,7 +539,6 @@ struct MessageAnalysis {
   bool contains_cord;
   bool contains_extension;
   bool contains_required;
-  bool constructor_requires_initialization;
 };
 
 // This class is used in FileGenerator, to ensure linear instead of
@@ -597,16 +575,6 @@ class PROTOC_EXPORT MessageSCCAnalyzer {
   Options options_;
   std::map<const SCC*, MessageAnalysis> analysis_cache_;
 };
-
-inline std::string SccInfoSymbol(const SCC* scc, const Options& options) {
-  return UniqueName("scc_info_" + ClassName(scc->GetRepresentative()),
-                    scc->GetRepresentative(), options);
-}
-
-inline std::string SccInfoPtrSymbol(const SCC* scc, const Options& options) {
-  return UniqueName("scc_info_ptr_" + ClassName(scc->GetRepresentative()),
-                    scc->GetRepresentative(), options);
-}
 
 void ListAllFields(const Descriptor* d,
                    std::vector<const FieldDescriptor*>* fields);
@@ -901,6 +869,8 @@ inline OneOfRangeImpl OneOfRange(const Descriptor* desc) { return {desc}; }
 void GenerateParserLoop(const Descriptor* descriptor, int num_hasbits,
                         const Options& options,
                         MessageSCCAnalyzer* scc_analyzer, io::Printer* printer);
+
+PROTOC_EXPORT std::string StripProto(const std::string& filename);
 
 }  // namespace cpp
 }  // namespace compiler

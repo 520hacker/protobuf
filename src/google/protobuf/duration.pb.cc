@@ -14,26 +14,23 @@
 #include <google/protobuf/wire_format.h>
 // @@protoc_insertion_point(includes)
 #include <google/protobuf/port_def.inc>
+
+PROTOBUF_PRAGMA_INIT_SEG
 PROTOBUF_NAMESPACE_OPEN
-class DurationDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<Duration> _instance;
-} _Duration_default_instance_;
+constexpr Duration::Duration(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : seconds_(PROTOBUF_LONGLONG(0))
+  , nanos_(0){}
+struct DurationDefaultTypeInternal {
+  constexpr DurationDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~DurationDefaultTypeInternal() {}
+  union {
+    Duration _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT DurationDefaultTypeInternal _Duration_default_instance_;
 PROTOBUF_NAMESPACE_CLOSE
-static void InitDefaultsscc_info_Duration_google_2fprotobuf_2fduration_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &PROTOBUF_NAMESPACE_ID::_Duration_default_instance_;
-    new (ptr) PROTOBUF_NAMESPACE_ID::Duration();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  PROTOBUF_NAMESPACE_ID::Duration::InitAsDefaultInstance();
-}
-
-PROTOBUF_EXPORT ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_Duration_google_2fprotobuf_2fduration_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_Duration_google_2fprotobuf_2fduration_2eproto}, {}};
-
 static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_google_2fprotobuf_2fduration_2eproto[1];
 static constexpr ::PROTOBUF_NAMESPACE_ID::EnumDescriptor const** file_level_enum_descriptors_google_2fprotobuf_2fduration_2eproto = nullptr;
 static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_google_2fprotobuf_2fduration_2eproto = nullptr;
@@ -58,32 +55,30 @@ static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] =
 const char descriptor_table_protodef_google_2fprotobuf_2fduration_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
   "\n\036google/protobuf/duration.proto\022\017google"
   ".protobuf\"*\n\010Duration\022\017\n\007seconds\030\001 \001(\003\022\r"
-  "\n\005nanos\030\002 \001(\005B|\n\023com.google.protobufB\rDu"
-  "rationProtoP\001Z*github.com/golang/protobu"
-  "f/ptypes/duration\370\001\001\242\002\003GPB\252\002\036Google.Prot"
-  "obuf.WellKnownTypesb\006proto3"
+  "\n\005nanos\030\002 \001(\005B\203\001\n\023com.google.protobufB\rD"
+  "urationProtoP\001Z1google.golang.org/protob"
+  "uf/types/known/durationpb\370\001\001\242\002\003GPB\252\002\036Goo"
+  "gle.Protobuf.WellKnownTypesb\006proto3"
   ;
-static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_google_2fprotobuf_2fduration_2eproto_deps[1] = {
-};
-static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_google_2fprotobuf_2fduration_2eproto_sccs[1] = {
-  &scc_info_Duration_google_2fprotobuf_2fduration_2eproto.base,
-};
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_google_2fprotobuf_2fduration_2eproto_once;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_google_2fprotobuf_2fduration_2eproto = {
-  false, false, descriptor_table_protodef_google_2fprotobuf_2fduration_2eproto, "google/protobuf/duration.proto", 227,
-  &descriptor_table_google_2fprotobuf_2fduration_2eproto_once, descriptor_table_google_2fprotobuf_2fduration_2eproto_sccs, descriptor_table_google_2fprotobuf_2fduration_2eproto_deps, 1, 0,
+  false, false, 235, descriptor_table_protodef_google_2fprotobuf_2fduration_2eproto, "google/protobuf/duration.proto", 
+  &descriptor_table_google_2fprotobuf_2fduration_2eproto_once, nullptr, 0, 1,
   schemas, file_default_instances, TableStruct_google_2fprotobuf_2fduration_2eproto::offsets,
-  file_level_metadata_google_2fprotobuf_2fduration_2eproto, 1, file_level_enum_descriptors_google_2fprotobuf_2fduration_2eproto, file_level_service_descriptors_google_2fprotobuf_2fduration_2eproto,
+  file_level_metadata_google_2fprotobuf_2fduration_2eproto, file_level_enum_descriptors_google_2fprotobuf_2fduration_2eproto, file_level_service_descriptors_google_2fprotobuf_2fduration_2eproto,
 };
+PROTOBUF_ATTRIBUTE_WEAK ::PROTOBUF_NAMESPACE_ID::Metadata
+descriptor_table_google_2fprotobuf_2fduration_2eproto_metadata_getter(int index) {
+  ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&descriptor_table_google_2fprotobuf_2fduration_2eproto);
+  return descriptor_table_google_2fprotobuf_2fduration_2eproto.file_level_metadata[index];
+}
 
 // Force running AddDescriptors() at dynamic initialization time.
-static bool dynamic_init_dummy_google_2fprotobuf_2fduration_2eproto = (static_cast<void>(::PROTOBUF_NAMESPACE_ID::internal::AddDescriptors(&descriptor_table_google_2fprotobuf_2fduration_2eproto)), true);
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY static ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptorsRunner dynamic_init_dummy_google_2fprotobuf_2fduration_2eproto(&descriptor_table_google_2fprotobuf_2fduration_2eproto);
 PROTOBUF_NAMESPACE_OPEN
 
 // ===================================================================
 
-void Duration::InitAsDefaultInstance() {
-}
 class Duration::_Internal {
  public:
 };
@@ -104,9 +99,10 @@ Duration::Duration(const Duration& from)
 }
 
 void Duration::SharedCtor() {
-  ::memset(&seconds_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&nanos_) -
-      reinterpret_cast<char*>(&seconds_)) + sizeof(nanos_));
+::memset(reinterpret_cast<char*>(this) + static_cast<size_t>(
+    reinterpret_cast<char*>(&seconds_) - reinterpret_cast<char*>(this)),
+    0, static_cast<size_t>(reinterpret_cast<char*>(&nanos_) -
+    reinterpret_cast<char*>(&seconds_)) + sizeof(nanos_));
 }
 
 Duration::~Duration() {
@@ -128,11 +124,6 @@ void Duration::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
 void Duration::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const Duration& Duration::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_Duration_google_2fprotobuf_2fduration_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void Duration::Clear() {
 // @@protoc_insertion_point(message_clear_start:google.protobuf.Duration)
@@ -148,7 +139,6 @@ void Duration::Clear() {
 
 const char* Duration::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
-  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);

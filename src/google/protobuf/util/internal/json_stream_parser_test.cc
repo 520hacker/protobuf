@@ -42,13 +42,11 @@
 namespace google {
 namespace protobuf {
 namespace util {
-using util::Status;
 namespace error {
 using util::error::INVALID_ARGUMENT;
 }  // namespace error
 namespace converter {
 
-using util::Status;
 
 // Tests for the JSON Stream Parser. These tests are intended to be
 // comprehensive and cover the following:
@@ -146,7 +144,7 @@ class JsonStreamParserTest : public ::testing::Test {
 
 #ifndef _MSC_VER
   // TODO(xiaofeng): We have to disable InSequence check for MSVC because it
-  // causes stack overflow due to its use of a linked list that is desctructed
+  // causes stack overflow due to its use of a linked list that is destructed
   // recursively.
   ::testing::InSequence in_sequence_;
 #endif  // !_MSC_VER

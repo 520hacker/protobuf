@@ -46,19 +46,19 @@ __author__ = 'kenton@google.com (Kenton Varda)'
 import encodings.raw_unicode_escape  # pylint: disable=unused-import
 import encodings.unicode_escape  # pylint: disable=unused-import
 import io
+import math
 import re
-
 import six
 
-if six.PY3:
-  long = int  # pylint: disable=redefined-builtin,invalid-name
-
-# pylint: disable=g-import-not-at-top
 from google.protobuf.internal import decoder
 from google.protobuf.internal import type_checkers
 from google.protobuf import descriptor
 from google.protobuf import text_encoding
 
+if six.PY3:
+  long = int  # pylint: disable=redefined-builtin,invalid-name
+
+# pylint: disable=g-import-not-at-top
 __all__ = ['MessageToString', 'Parse', 'PrintMessage', 'PrintField',
            'PrintFieldValue', 'Merge', 'MessageToBytes']
 
@@ -541,7 +541,7 @@ class _Printer(object):
         # For groups, use the capitalized name.
         out.write(field.message_type.name)
       else:
-        out.write(field.name)
+          out.write(field.name)
 
     if (self.force_colon or
         field.cpp_type != descriptor.FieldDescriptor.CPPTYPE_MESSAGE):
@@ -630,7 +630,10 @@ class _Printer(object):
       if self.float_format is not None:
         out.write('{1:{0}}'.format(self.float_format, value))
       else:
-        out.write(str(type_checkers.ToShortestFloat(value)))
+        if math.isnan(value):
+          out.write(str(value))
+        else:
+          out.write(str(type_checkers.ToShortestFloat(value)))
     elif (field.cpp_type == descriptor.FieldDescriptor.CPPTYPE_DOUBLE and
           self.double_format is not None):
       out.write('{1:{0}}'.format(self.double_format, value))
@@ -879,8 +882,11 @@ class _Parser(object):
           raise tokenizer.ParseErrorPreviousToken('Expected "%s".' %
                                                   (expanded_any_end_token,))
         self._MergeField(tokenizer, expanded_any_sub_message)
+      deterministic = False
+
       message.Pack(expanded_any_sub_message,
-                   type_url_prefix=type_url_prefix)
+                   type_url_prefix=type_url_prefix,
+                   deterministic=deterministic)
       return
 
     if tokenizer.TryConsume('['):
@@ -896,6 +902,8 @@ class _Parser(object):
       # pylint: disable=protected-access
       field = message.Extensions._FindExtensionByName(name)
       # pylint: enable=protected-access
+
+
       if not field:
         if self.allow_unknown_extension:
           field = None
@@ -981,6 +989,7 @@ class _Parser(object):
     # semicolons.
     if not tokenizer.TryConsume(','):
       tokenizer.TryConsume(';')
+
 
   def _ConsumeAnyTypeUrl(self, tokenizer):
     """Consumes a google.protobuf.Any type URL and returns the type name."""

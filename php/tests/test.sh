@@ -11,12 +11,17 @@ PHP_VERSION=$(php -r "echo PHP_VERSION;")
 
 # Each version of PHPUnit supports a fairly narrow range of PHP versions.
 case "$PHP_VERSION" in
-  7.0.*|7.1.*|7.2.*)
-    # Oddly older than for 5.6. Not sure the reason.
-    PHPUNIT=phpunit-5.6.0.phar
+  7.0.*)
+    PHPUNIT=phpunit-6.phar
+    ;;
+  7.1.*|7.2.*)
+    PHPUNIT=phpunit-7.5.0.phar
     ;;
   7.3.*|7.4.*)
     PHPUNIT=phpunit-8.phar
+    ;;
+  8.0.*)
+    PHPUNIT=phpunit-9.phar
     ;;
   *)
     echo "ERROR: Unsupported PHP version $PHP_VERSION"
@@ -26,7 +31,7 @@ esac
 
 [ -f $PHPUNIT ] || wget https://phar.phpunit.de/$PHPUNIT
 
-tests=( array_test.php encode_decode_test.php generated_class_test.php map_field_test.php well_known_test.php descriptors_test.php wrapper_type_setters_test.php)
+tests=( ArrayTest.php EncodeDecodeTest.php GeneratedClassTest.php MapFieldTest.php WellKnownTest.php DescriptorsTest.php WrapperTypeSettersTest.php)
 
 for t in "${tests[@]}"
 do
@@ -51,11 +56,11 @@ done
 
 export ZEND_DONT_UNLOAD_MODULES=1
 export USE_ZEND_ALLOC=0
-valgrind --leak-check=yes php -dextension=../ext/google/protobuf/modules/protobuf.so memory_leak_test.php
-valgrind --leak-check=yes php -d protobuf.keep_descriptor_pool_after_request=1 -dextension=../ext/google/protobuf/modules/protobuf.so memory_leak_test.php
+valgrind --suppressions=valgrind.supp --leak-check=yes php -dextension=../ext/google/protobuf/modules/protobuf.so memory_leak_test.php
+valgrind --suppressions=valgrind.supp --leak-check=yes php -d protobuf.keep_descriptor_pool_after_request=1 -dextension=../ext/google/protobuf/modules/protobuf.so memory_leak_test.php
 
 # TODO(teboring): Only for debug (phpunit has memory leak which blocks this beging used by
-# regresssion test.)
+# regression test.)
 
 # for t in "${tests[@]}"
 # do

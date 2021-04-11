@@ -49,6 +49,7 @@
 #include <google/protobuf/util/internal/constants.h>
 #include <gtest/gtest.h>
 #include <google/protobuf/stubs/casts.h>
+#include <google/protobuf/stubs/status.h>
 
 
 namespace google {
@@ -78,7 +79,6 @@ using proto_util_converter::testing::Proto3Message;
 using proto_util_converter::testing::StructType;
 using proto_util_converter::testing::TimestampDuration;
 using ::testing::_;
-using util::Status;
 
 
 namespace {
@@ -105,23 +105,24 @@ class ProtostreamObjectSourceTest
   virtual ~ProtostreamObjectSourceTest() {}
 
   void DoTest(const Message& msg, const Descriptor* descriptor) {
-    Status status = ExecuteTest(msg, descriptor);
+    util::Status status = ExecuteTest(msg, descriptor);
     EXPECT_EQ(util::Status(), status);
   }
 
-  Status ExecuteTest(const Message& msg, const Descriptor* descriptor) {
+  util::Status ExecuteTest(const Message& msg, const Descriptor* descriptor) {
     std::ostringstream oss;
     msg.SerializePartialToOstream(&oss);
     std::string proto = oss.str();
     ArrayInputStream arr_stream(proto.data(), proto.size());
     CodedInputStream in_stream(&arr_stream);
 
+    ProtoStreamObjectSource::RenderOptions render_options;
+    render_options.use_lower_camel_for_enums = use_lower_camel_for_enums_;
+    render_options.use_ints_for_enums = use_ints_for_enums_;
+    render_options.preserve_proto_field_names = use_preserve_proto_field_names_;
     std::unique_ptr<ProtoStreamObjectSource> os(
-        helper_.NewProtoSource(&in_stream, GetTypeUrl(descriptor)));
-    if (use_lower_camel_for_enums_) os->set_use_lower_camel_for_enums(true);
-    if (use_ints_for_enums_) os->set_use_ints_for_enums(true);
-    if (use_preserve_proto_field_names_)
-      os->set_preserve_proto_field_names(true);
+        helper_.NewProtoSource(&in_stream, GetTypeUrl(descriptor),
+                               render_options));
     os->set_max_recursion_depth(64);
     return os->WriteTo(&mock_);
   }
@@ -595,7 +596,7 @@ TEST_P(ProtostreamObjectSourceTest, CyclicMessageDepthTest) {
     current = next;
   }
 
-  Status status = ExecuteTest(cyclic, Cyclic::descriptor());
+  util::Status status = ExecuteTest(cyclic, Cyclic::descriptor());
   EXPECT_EQ(util::error::INVALID_ARGUMENT, status.code());
 }
 
@@ -941,7 +942,7 @@ TEST_P(ProtostreamObjectSourceAnysTest, MissingTypeUrlError) {
   // We start the "AnyOut" part and then fail when we hit the Any object.
   ow_.StartObject("");
 
-  Status status = ExecuteTest(out, AnyOut::descriptor());
+  util::Status status = ExecuteTest(out, AnyOut::descriptor());
   EXPECT_EQ(util::error::INTERNAL, status.code());
 }
 
@@ -957,7 +958,7 @@ TEST_P(ProtostreamObjectSourceAnysTest, UnknownTypeServiceError) {
   // We start the "AnyOut" part and then fail when we hit the Any object.
   ow_.StartObject("");
 
-  Status status = ExecuteTest(out, AnyOut::descriptor());
+  util::Status status = ExecuteTest(out, AnyOut::descriptor());
   EXPECT_EQ(util::error::INTERNAL, status.code());
 }
 
@@ -973,7 +974,7 @@ TEST_P(ProtostreamObjectSourceAnysTest, UnknownTypeError) {
   // We start the "AnyOut" part and then fail when we hit the Any object.
   ow_.StartObject("");
 
-  Status status = ExecuteTest(out, AnyOut::descriptor());
+  util::Status status = ExecuteTest(out, AnyOut::descriptor());
   EXPECT_EQ(util::error::INTERNAL, status.code());
 }
 
@@ -1106,7 +1107,7 @@ TEST_P(ProtostreamObjectSourceTimestampTest, InvalidTimestampBelowMinTest) {
   ts->set_seconds(kTimestampMinSeconds - 1);
   ow_.StartObject("");
 
-  Status status = ExecuteTest(out, TimestampDuration::descriptor());
+  util::Status status = ExecuteTest(out, TimestampDuration::descriptor());
   EXPECT_EQ(util::error::INTERNAL, status.code());
 }
 
@@ -1117,7 +1118,7 @@ TEST_P(ProtostreamObjectSourceTimestampTest, InvalidTimestampAboveMaxTest) {
   ts->set_seconds(kTimestampMaxSeconds + 1);
   ow_.StartObject("");
 
-  Status status = ExecuteTest(out, TimestampDuration::descriptor());
+  util::Status status = ExecuteTest(out, TimestampDuration::descriptor());
   EXPECT_EQ(util::error::INTERNAL, status.code());
 }
 
@@ -1128,7 +1129,7 @@ TEST_P(ProtostreamObjectSourceTimestampTest, InvalidDurationBelowMinTest) {
   dur->set_seconds(kDurationMinSeconds - 1);
   ow_.StartObject("");
 
-  Status status = ExecuteTest(out, TimestampDuration::descriptor());
+  util::Status status = ExecuteTest(out, TimestampDuration::descriptor());
   EXPECT_EQ(util::error::INTERNAL, status.code());
 }
 
@@ -1139,7 +1140,7 @@ TEST_P(ProtostreamObjectSourceTimestampTest, InvalidDurationAboveMaxTest) {
   dur->set_seconds(kDurationMaxSeconds + 1);
   ow_.StartObject("");
 
-  Status status = ExecuteTest(out, TimestampDuration::descriptor());
+  util::Status status = ExecuteTest(out, TimestampDuration::descriptor());
   EXPECT_EQ(util::error::INTERNAL, status.code());
 }
 
