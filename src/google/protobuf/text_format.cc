@@ -54,7 +54,6 @@
 #include <google/protobuf/dynamic_message.h>
 #include <google/protobuf/map_field.h>
 #include <google/protobuf/message.h>
-#include <google/protobuf/port_def.inc>
 #include <google/protobuf/repeated_field.h>
 #include <google/protobuf/unknown_field_set.h>
 #include <google/protobuf/wire_format_lite.h>
@@ -62,6 +61,9 @@
 #include <google/protobuf/io/strtod.h>
 #include <google/protobuf/stubs/map_util.h>
 #include <google/protobuf/stubs/stl_util.h>
+
+// Must be included last.
+#include <google/protobuf/port_def.inc>
 
 
 namespace google {
@@ -161,7 +163,7 @@ TextFormat::ParseLocation TextFormat::ParseInfoTree::GetLocation(
 
   const std::vector<TextFormat::ParseLocation>* locations =
       FindOrNull(locations_, field);
-  if (locations == nullptr || index >= locations->size()) {
+  if (locations == nullptr || index >= static_cast<int64>(locations->size())) {
     return TextFormat::ParseLocation();
   }
 
@@ -176,7 +178,7 @@ TextFormat::ParseInfoTree* TextFormat::ParseInfoTree::GetTreeForNested(
   }
 
   auto it = nested_.find(field);
-  if (it == nested_.end() || index >= it->second.size()) {
+  if (it == nested_.end() || index >= static_cast<int64>(it->second.size())) {
     return nullptr;
   }
 
@@ -286,6 +288,15 @@ class TextFormat::Parser::ParserImpl {
     // Consume fields until we cannot do so anymore.
     while (true) {
       if (LookingAtType(io::Tokenizer::TYPE_END)) {
+        // Ensures recursion limit properly unwinded, but only for success
+        // cases. This implicitly avoids the check when `Parse` returns false
+        // via `DO(...)`.
+        GOOGLE_DCHECK(had_errors_ || recursion_limit_ == initial_recursion_limit_)
+            << "Recursion limit at end of parse should be "
+            << initial_recursion_limit_ << ", but was " << recursion_limit_
+            << ". Difference of " << initial_recursion_limit_ - recursion_limit_
+            << " stack frames not accounted for stack unwind.";
+
         return !had_errors_;
       }
 
@@ -447,8 +458,7 @@ class TextFormat::Parser::ParserImpl {
       DO(ConsumeIdentifier(&field_name));
 
       int32 field_number;
-      if (allow_field_number_ &&
-          safe_strto32(field_name, &field_number)) {
+      if (allow_field_number_ && safe_strto32(field_name, &field_number)) {
         if (descriptor->IsExtensionNumber(field_number)) {
           field = finder_
                       ? finder_->FindExtensionByNumber(descriptor, field_number)
@@ -832,10 +842,19 @@ class TextFormat::Parser::ParserImpl {
   }
 
   bool SkipFieldValue() {
+    if (--recursion_limit_ < 0) {
+      ReportError(
+          StrCat("Message is too deep, the parser exceeded the "
+                       "configured recursion limit of ",
+                       initial_recursion_limit_, "."));
+      return false;
+    }
+
     if (LookingAtType(io::Tokenizer::TYPE_STRING)) {
       while (LookingAtType(io::Tokenizer::TYPE_STRING)) {
         tokenizer_.Next();
       }
+      ++recursion_limit_;
       return true;
     }
     if (TryConsume("[")) {
@@ -850,6 +869,7 @@ class TextFormat::Parser::ParserImpl {
         }
         DO(Consume(","));
       }
+      ++recursion_limit_;
       return true;
     }
     // Possible field values other than string:
@@ -879,6 +899,7 @@ class TextFormat::Parser::ParserImpl {
         !LookingAtType(io::Tokenizer::TYPE_IDENTIFIER)) {
       std::string text = tokenizer_.current().text;
       ReportError("Cannot skip field value, unexpected token: " + text);
+      ++recursion_limit_;
       return false;
     }
     // Combination of '-' and TYPE_IDENTIFIER may result in an invalid field
@@ -893,10 +914,12 @@ class TextFormat::Parser::ParserImpl {
       if (text != "inf" &&
           text != "infinity" && text != "nan") {
         ReportError("Invalid float number: " + text);
+        ++recursion_limit_;
         return false;
       }
     }
     tokenizer_.Next();
+    ++recursion_limit_;
     return true;
   }
 
@@ -1300,7 +1323,7 @@ class TextFormat::Printer::TextGenerator
       if (failed_) return;
     }
 
-    while (size > buffer_size_) {
+    while (static_cast<int64>(size) > buffer_size_) {
       // Data exceeds space in the buffer.  Copy what we can and request a
       // new buffer.
       if (buffer_size_ > 0) {
@@ -1432,7 +1455,7 @@ bool TextFormat::Parser::Parse(io::ZeroCopyInputStream* input,
   return MergeUsingImpl(input, output, &parser);
 }
 
-bool TextFormat::Parser::ParseFromString(const std::string& input,
+bool TextFormat::Parser::ParseFromString(ConstStringParam input,
                                          Message* output) {
   DO(CheckParseInputSize(input, error_collector_));
   io::ArrayInputStream input_stream(input.data(), input.size());
@@ -1451,7 +1474,7 @@ bool TextFormat::Parser::Merge(io::ZeroCopyInputStream* input,
   return MergeUsingImpl(input, output, &parser);
 }
 
-bool TextFormat::Parser::MergeFromString(const std::string& input,
+bool TextFormat::Parser::MergeFromString(ConstStringParam input,
                                          Message* output) {
   DO(CheckParseInputSize(input, error_collector_));
   io::ArrayInputStream input_stream(input.data(), input.size());
@@ -1497,12 +1520,12 @@ bool TextFormat::Parser::ParseFieldValueFromString(const std::string& input,
   return Parser().Merge(input, output);
 }
 
-/* static */ bool TextFormat::ParseFromString(const std::string& input,
+/* static */ bool TextFormat::ParseFromString(ConstStringParam input,
                                               Message* output) {
   return Parser().ParseFromString(input, output);
 }
 
-/* static */ bool TextFormat::MergeFromString(const std::string& input,
+/* static */ bool TextFormat::MergeFromString(ConstStringParam input,
                                               Message* output) {
   return Parser().MergeFromString(input, output);
 }
@@ -1525,9 +1548,9 @@ class StringBaseTextGenerator : public TextFormat::BaseTextGenerator {
 
 // Some compilers do not support ref-qualifiers even in C++11 mode.
 // Disable the optimization for now and revisit it later.
-#if 0   // LANG_CXX11
+#if 0  // LANG_CXX11
   std::string Consume() && { return std::move(output_); }
-#else   // !LANG_CXX11
+#else  // !LANG_CXX11
   const std::string& Get() { return output_; }
 #endif  // LANG_CXX11
 
@@ -2031,8 +2054,8 @@ void TextFormat::Printer::Print(const Message& message,
   if (print_message_fields_in_index_order_) {
     std::sort(fields.begin(), fields.end(), FieldIndexSorter());
   }
-  for (int i = 0; i < fields.size(); i++) {
-    PrintField(message, reflection, fields[i], generator);
+  for (const FieldDescriptor* field : fields) {
+    PrintField(message, reflection, field, generator);
   }
   if (!hide_unknown_fields_) {
     PrintUnknownFields(reflection->GetUnknownFields(message), generator,
@@ -2107,7 +2130,7 @@ class MapFieldPrinterHelper {
   // DynamicMapSorter::Sort cannot be used because it enfores syncing with
   // repeated field.
   static bool SortMap(const Message& message, const Reflection* reflection,
-                      const FieldDescriptor* field, MessageFactory* factory,
+                      const FieldDescriptor* field,
                       std::vector<const Message*>* sorted_map_field);
   static void CopyKey(const MapKey& key, Message* message,
                       const FieldDescriptor* field_desc);
@@ -2118,7 +2141,7 @@ class MapFieldPrinterHelper {
 // Returns true if elements contained in sorted_map_field need to be released.
 bool MapFieldPrinterHelper::SortMap(
     const Message& message, const Reflection* reflection,
-    const FieldDescriptor* field, MessageFactory* factory,
+    const FieldDescriptor* field,
     std::vector<const Message*>* sorted_map_field) {
   bool need_release = false;
   const MapFieldBase& base = *reflection->GetMapData(message, field);
@@ -2134,7 +2157,8 @@ bool MapFieldPrinterHelper::SortMap(
     // TODO(teboring): For performance, instead of creating map entry message
     // for each element, just store map keys and sort them.
     const Descriptor* map_entry_desc = field->message_type();
-    const Message* prototype = factory->GetPrototype(map_entry_desc);
+    const Message* prototype =
+        reflection->GetMessageFactory()->GetPrototype(map_entry_desc);
     for (MapIterator iter =
              reflection->MapBegin(const_cast<Message*>(&message), field);
          iter != reflection->MapEnd(const_cast<Message*>(&message), field);
@@ -2247,13 +2271,12 @@ void TextFormat::Printer::PrintField(const Message& message,
     count = 1;
   }
 
-  DynamicMessageFactory factory;
   std::vector<const Message*> sorted_map_field;
   bool need_release = false;
   bool is_map = field->is_map();
   if (is_map) {
     need_release = internal::MapFieldPrinterHelper::SortMap(
-        message, reflection, field, &factory, &sorted_map_field);
+        message, reflection, field, &sorted_map_field);
   }
 
   for (int j = 0; j < count; ++j) {
@@ -2291,8 +2314,8 @@ void TextFormat::Printer::PrintField(const Message& message,
   }
 
   if (need_release) {
-    for (int j = 0; j < sorted_map_field.size(); ++j) {
-      delete sorted_map_field[j];
+    for (const Message* message_to_delete : sorted_map_field) {
+      delete message_to_delete;
     }
   }
 }
@@ -2372,7 +2395,8 @@ void TextFormat::Printer::PrintFieldValue(const Message& message,
       const std::string* value_to_print = &value;
       std::string truncated_value;
       if (truncate_string_field_longer_than_ > 0 &&
-          truncate_string_field_longer_than_ < value.size()) {
+          static_cast<size_t>(truncate_string_field_longer_than_) <
+              value.size()) {
         truncated_value = value.substr(0, truncate_string_field_longer_than_) +
                           "...<truncated>...";
         value_to_print = &truncated_value;
@@ -2555,3 +2579,5 @@ void TextFormat::Printer::PrintUnknownFields(
 
 }  // namespace protobuf
 }  // namespace google
+
+#include <google/protobuf/port_undef.inc>

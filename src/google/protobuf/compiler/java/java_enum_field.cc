@@ -32,6 +32,9 @@
 //  Based on original Protocol Buffers design by
 //  Sanjay Ghemawat, Jeff Dean, and others.
 
+#include <google/protobuf/compiler/java/java_enum_field.h>
+
+#include <cstdint>
 #include <map>
 #include <string>
 
@@ -39,7 +42,6 @@
 #include <google/protobuf/stubs/common.h>
 #include <google/protobuf/compiler/java/java_context.h>
 #include <google/protobuf/compiler/java/java_doc_comment.h>
-#include <google/protobuf/compiler/java/java_enum_field.h>
 #include <google/protobuf/compiler/java/java_helpers.h>
 #include <google/protobuf/compiler/java/java_name_resolver.h>
 #include <google/protobuf/io/printer.h>
@@ -67,7 +69,7 @@ void SetEnumVariables(const FieldDescriptor* descriptor, int messageBitIndex,
   (*variables)["default_number"] =
       StrCat(descriptor->default_value_enum()->number());
   (*variables)["tag"] = StrCat(
-      static_cast<int32>(internal::WireFormat::MakeTag(descriptor)));
+      static_cast<int32_t>(internal::WireFormat::MakeTag(descriptor)));
   (*variables)["tag_size"] = StrCat(
       internal::WireFormat::TagSize(descriptor->number(), GetType(descriptor)));
   // TODO(birdo): Add @deprecated javadoc when generating javadoc is supported
@@ -81,7 +83,7 @@ void SetEnumVariables(const FieldDescriptor* descriptor, int messageBitIndex,
   // with v2.5.0/v2.6.1, and remove the @SuppressWarnings annotations.
   (*variables)["for_number"] = "valueOf";
 
-  if (SupportFieldPresence(descriptor)) {
+  if (HasHasbit(descriptor)) {
     // For singular messages and builders, one bit is used for the hasField bit.
     (*variables)["get_has_field_bit_message"] = GenerateGetBit(messageBitIndex);
     (*variables)["get_has_field_bit_builder"] = GenerateGetBit(builderBitIndex);
@@ -145,7 +147,7 @@ ImmutableEnumFieldGenerator::ImmutableEnumFieldGenerator(
 ImmutableEnumFieldGenerator::~ImmutableEnumFieldGenerator() {}
 
 int ImmutableEnumFieldGenerator::GetNumBitsForMessage() const {
-  return SupportFieldPresence(descriptor_) ? 1 : 0;
+  return HasHasbit(descriptor_) ? 1 : 0;
 }
 
 int ImmutableEnumFieldGenerator::GetNumBitsForBuilder() const {
@@ -154,7 +156,7 @@ int ImmutableEnumFieldGenerator::GetNumBitsForBuilder() const {
 
 void ImmutableEnumFieldGenerator::GenerateInterfaceMembers(
     io::Printer* printer) const {
-  if (SupportFieldPresence(descriptor_)) {
+  if (HasHazzer(descriptor_)) {
     WriteFieldAccessorDocComment(printer, descriptor_, HAZZER);
     printer->Print(variables_,
                    "$deprecation$boolean has$capitalized_name$();\n");
@@ -171,7 +173,7 @@ void ImmutableEnumFieldGenerator::GenerateInterfaceMembers(
 void ImmutableEnumFieldGenerator::GenerateMembers(io::Printer* printer) const {
   printer->Print(variables_, "private int $name$_;\n");
   PrintExtraFieldInfo(variables_, printer);
-  if (SupportFieldPresence(descriptor_)) {
+  if (HasHazzer(descriptor_)) {
     WriteFieldAccessorDocComment(printer, descriptor_, HAZZER);
     printer->Print(variables_,
                    "@java.lang.Override $deprecation$public boolean "
@@ -203,7 +205,7 @@ void ImmutableEnumFieldGenerator::GenerateMembers(io::Printer* printer) const {
 void ImmutableEnumFieldGenerator::GenerateBuilderMembers(
     io::Printer* printer) const {
   printer->Print(variables_, "private int $name$_ = $default_number$;\n");
-  if (SupportFieldPresence(descriptor_)) {
+  if (HasHazzer(descriptor_)) {
     WriteFieldAccessorDocComment(printer, descriptor_, HAZZER);
     printer->Print(variables_,
                    "@java.lang.Override $deprecation$public boolean "
@@ -287,7 +289,7 @@ void ImmutableEnumFieldGenerator::GenerateBuilderClearCode(
 
 void ImmutableEnumFieldGenerator::GenerateMergingCode(
     io::Printer* printer) const {
-  if (SupportFieldPresence(descriptor_)) {
+  if (HasHazzer(descriptor_)) {
     printer->Print(variables_,
                    "if (other.has$capitalized_name$()) {\n"
                    "  set$capitalized_name$(other.get$capitalized_name$());\n"
@@ -305,7 +307,7 @@ void ImmutableEnumFieldGenerator::GenerateMergingCode(
 
 void ImmutableEnumFieldGenerator::GenerateBuildingCode(
     io::Printer* printer) const {
-  if (SupportFieldPresence(descriptor_)) {
+  if (HasHazzer(descriptor_)) {
     printer->Print(variables_,
                    "if ($get_has_field_bit_from_local$) {\n"
                    "  $set_has_field_bit_to_local$;\n"
@@ -389,15 +391,14 @@ ImmutableEnumOneofFieldGenerator::~ImmutableEnumOneofFieldGenerator() {}
 void ImmutableEnumOneofFieldGenerator::GenerateMembers(
     io::Printer* printer) const {
   PrintExtraFieldInfo(variables_, printer);
-  if (SupportFieldPresence(descriptor_)) {
-    WriteFieldAccessorDocComment(printer, descriptor_, HAZZER);
-    printer->Print(
-        variables_,
-        "$deprecation$public boolean ${$has$capitalized_name$$}$() {\n"
-        "  return $has_oneof_case_message$;\n"
-        "}\n");
-    printer->Annotate("{", "}", descriptor_);
-  }
+  GOOGLE_DCHECK(HasHazzer(descriptor_));
+  WriteFieldAccessorDocComment(printer, descriptor_, HAZZER);
+  printer->Print(variables_,
+                 "$deprecation$public boolean ${$has$capitalized_name$$}$() {\n"
+                 "  return $has_oneof_case_message$;\n"
+                 "}\n");
+  printer->Annotate("{", "}", descriptor_);
+
   if (SupportUnknownEnumValue(descriptor_->file())) {
     WriteFieldEnumValueAccessorDocComment(printer, descriptor_, GETTER);
     printer->Print(
@@ -426,16 +427,15 @@ void ImmutableEnumOneofFieldGenerator::GenerateMembers(
 
 void ImmutableEnumOneofFieldGenerator::GenerateBuilderMembers(
     io::Printer* printer) const {
-  if (SupportFieldPresence(descriptor_)) {
-    WriteFieldAccessorDocComment(printer, descriptor_, HAZZER);
-    printer->Print(
-        variables_,
-        "@java.lang.Override\n"
-        "$deprecation$public boolean ${$has$capitalized_name$$}$() {\n"
-        "  return $has_oneof_case_message$;\n"
-        "}\n");
-    printer->Annotate("{", "}", descriptor_);
-  }
+  GOOGLE_DCHECK(HasHazzer(descriptor_));
+  WriteFieldAccessorDocComment(printer, descriptor_, HAZZER);
+  printer->Print(variables_,
+                 "@java.lang.Override\n"
+                 "$deprecation$public boolean ${$has$capitalized_name$$}$() {\n"
+                 "  return $has_oneof_case_message$;\n"
+                 "}\n");
+  printer->Annotate("{", "}", descriptor_);
+
   if (SupportUnknownEnumValue(descriptor_->file())) {
     WriteFieldEnumValueAccessorDocComment(printer, descriptor_, GETTER);
     printer->Print(
@@ -712,7 +712,7 @@ void RepeatedImmutableEnumFieldGenerator::GenerateBuilderMembers(
       // list is immutable. If it's immutable, the invariant is that it must
       // either an instance of Collections.emptyList() or it's an ArrayList
       // wrapped in a Collections.unmodifiableList() wrapper and nobody else has
-      // a refererence to the underlying ArrayList. This invariant allows us to
+      // a reference to the underlying ArrayList. This invariant allows us to
       // share instances of lists between protocol buffers avoiding expensive
       // memory allocations. Note, immutable is a strong guarantee here -- not
       // just that the list cannot be modified via the reference but that the

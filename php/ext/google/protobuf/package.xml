@@ -10,18 +10,20 @@
   <email>protobuf-opensource@google.com</email>
   <active>yes</active>
  </lead>
- <date>2020-06-01</date>
- <time>01:14:10</time>
+ <date>2021-04-07</date>
+ <time>14:27:08</time>
  <version>
-  <release>3.12.3</release>
-  <api>3.12.3</api>
+  <release>3.15.8</release>
+  <api>3.15.8</api>
  </version>
  <stability>
   <release>stable</release>
   <api>stable</api>
  </stability>
  <license uri="https://opensource.org/licenses/BSD-3-Clause">3-Clause BSD License</license>
- <notes>GA release.</notes>
+ <notes>
+ No new changes in 3.15.8
+ </notes>
  <contents>
   <dir baseinstalldir="/" name="/">
     <file baseinstalldir="/" name="config.m4" role="src"/>
@@ -29,8 +31,6 @@
     <file baseinstalldir="/" name="arena.h" role="src"/>
     <file baseinstalldir="/" name="array.c" role="src"/>
     <file baseinstalldir="/" name="array.h" role="src"/>
-    <file baseinstalldir="/" name="bundled_php.c" role="src"/>
-    <file baseinstalldir="/" name="bundled_php.h" role="src"/>
     <file baseinstalldir="/" name="convert.c" role="src"/>
     <file baseinstalldir="/" name="convert.h" role="src"/>
     <file baseinstalldir="/" name="def.c" role="src"/>
@@ -45,13 +45,16 @@
     <file baseinstalldir="/" name="php-upb.h" role="src"/>
     <file baseinstalldir="/" name="protobuf.c" role="src"/>
     <file baseinstalldir="/" name="protobuf.h" role="src"/>
+    <file baseinstalldir="/" name="wkt.inc" role="src"/>
+    <file baseinstalldir="/" name="third_party/wyhash/wyhash.h" role="src"/>
+    <file baseinstalldir="/" name="third_party/wyhash/LICENSE" role="doc"/>
     <file baseinstalldir="/" name="LICENSE" role="doc"/>
   </dir>
  </contents>
  <dependencies>
   <required>
    <php>
-    <min>5.5.9</min>
+    <min>7.0.0</min>
    </php>
    <pearinstaller>
     <min>1.4.0</min>
@@ -618,6 +621,301 @@ G  A release.
    <time>01:09:39</time>
    <license uri="https://opensource.org/licenses/BSD-3-Clause">3-Clause BSD License</license>
    <notes>GA release.</notes>
+  </release>
+  <release>
+   <version>
+    <release>3.13.0RC1</release>
+    <api>3.13.0</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <date>2020-08-05</date>
+   <time>11:21:41</time>
+   <license uri="https://opensource.org/licenses/BSD-3-Clause">3-Clause BSD License</license>
+   <notes>GA release.</notes>
+  </release>
+  <release>
+   <version>
+    <release>3.13.0RC2</release>
+    <api>3.13.0</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <date>2020-08-05</date>
+   <time>11:22:52</time>
+   <license uri="https://opensource.org/licenses/BSD-3-Clause">3-Clause BSD License</license>
+   <notes>GA release.</notes>
+  </release>
+  <release>
+   <version>
+    <release>3.13.0RC3</release>
+    <api>3.13.0</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <date>2020-08-12</date>
+   <time>13:46:54</time>
+   <license uri="https://opensource.org/licenses/BSD-3-Clause">3-Clause BSD License</license>
+   <notes>GA release.</notes>
+  </release>
+  <release>
+   <version>
+    <release>3.13.0</release>
+    <api>3.13.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2020-08-14</date>
+   <time>14:07:59</time>
+   <license uri="https://opensource.org/licenses/BSD-3-Clause">3-Clause BSD License</license>
+   <notes>GA release.</notes>
+  </release>
+  <release>
+   <version>
+    <release>3.13.0.1</release>
+    <api>3.13.0.1</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2020-10-08</date>
+   <time>14:07:59</time>
+   <license uri="https://opensource.org/licenses/BSD-3-Clause">3-Clause BSD License</license>
+   <notes>GA release.</notes>
+  </release>
+  <release>
+   <version>
+    <release>3.14.0RC1</release>
+    <api>3.14.0</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <date>2020-11-05</date>
+   <time>13:39:47</time>
+   <license uri="https://opensource.org/licenses/BSD-3-Clause">3-Clause BSD License</license>
+   <notes>
+   </notes>
+  </release>
+  <release>
+   <version>
+    <release>3.14.0RC2</release>
+    <api>3.14.0</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <date>2020-11-10</date>
+   <time>16:28:41</time>
+   <license uri="https://opensource.org/licenses/BSD-3-Clause">3-Clause BSD License</license>
+   <notes>
+   </notes>
+  </release>
+  <release>
+   <version>
+    <release>3.14.0RC3</release>
+    <api>3.14.0</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <date>2020-11-11</date>
+   <time>10:35:18</time>
+   <license uri="https://opensource.org/licenses/BSD-3-Clause">3-Clause BSD License</license>
+   <notes>
+   </notes>
+  </release>
+  <release>
+   <version>
+    <release>3.14.0</release>
+    <api>3.14.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2020-11-12</date>
+   <time>14:06:40</time>
+   <license uri="https://opensource.org/licenses/BSD-3-Clause">3-Clause BSD License</license>
+   <notes>
+   </notes>
+  </release>
+  <release>
+   <version>
+    <release>3.15.0RC1</release>
+    <api>3.15.0</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <date>2021-02-05</date>
+   <time>14:15:36</time>
+   <license uri="https://opensource.org/licenses/BSD-3-Clause">3-Clause BSD License</license>
+   <notes>
+   </notes>
+  </release>
+  <release>
+   <version>
+    <release>3.15.0RC2</release>
+    <api>3.15.0</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <date>2021-02-17</date>
+   <time>09:10:33</time>
+   <license uri="https://opensource.org/licenses/BSD-3-Clause">3-Clause BSD License</license>
+   <notes>
+   </notes>
+  </release>
+  <release>
+   <version>
+    <release>3.15.0</release>
+    <api>3.15.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2021-02-18</date>
+   <time>10:33:10</time>
+   <license uri="https://opensource.org/licenses/BSD-3-Clause">3-Clause BSD License</license>
+   <notes>
+   </notes>
+  </release>
+  <release>
+   <version>
+    <release>3.15.1</release>
+    <api>3.15.1</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2021-02-19</date>
+   <time>10:50:04</time>
+   <license uri="https://opensource.org/licenses/BSD-3-Clause">3-Clause BSD License</license>
+   <notes>
+   </notes>
+  </release>
+  <release>
+   <version>
+    <release>3.15.2</release>
+    <api>3.15.2</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2021-02-23</date>
+   <time>11:35:09</time>
+   <license uri="https://opensource.org/licenses/BSD-3-Clause">3-Clause BSD License</license>
+   <notes>
+   </notes>
+  </release>
+  <release>
+   <version>
+    <release>3.15.3</release>
+    <api>3.15.3</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2021-02-24</date>
+   <time>16:49:52</time>
+   <license uri="https://opensource.org/licenses/BSD-3-Clause">3-Clause BSD License</license>
+   <notes>
+   </notes>
+  </release>
+  <release>
+   <version>
+    <release>3.15.4</release>
+    <api>3.15.4</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2021-03-02</date>
+   <time>15:25:02</time>
+   <license uri="https://opensource.org/licenses/BSD-3-Clause">3-Clause BSD License</license>
+   <notes>
+   </notes>
+  </release>
+  <release>
+   <version>
+    <release>3.15.5</release>
+    <api>3.15.5</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2021-03-04</date>
+   <time>10:45:30</time>
+   <license uri="https://opensource.org/licenses/BSD-3-Clause">3-Clause BSD License</license>
+   <notes>
+   </notes>
+  </release>
+  <release>
+   <version>
+    <release>3.15.6</release>
+    <api>3.15.6</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2021-03-10</date>
+   <time>10:11:34</time>
+   <license uri="https://opensource.org/licenses/BSD-3-Clause">3-Clause BSD License</license>
+   <notes>
+   </notes>
+  </release>
+  <release>
+   <version>
+    <release>3.15.7</release>
+    <api>3.15.7</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2021-04-02</date>
+   <time>10:01:42</time>
+   <license uri="https://opensource.org/licenses/BSD-3-Clause">3-Clause BSD License</license>
+   <notes>
+   </notes>
+  </release>
+  <release>
+   <version>
+    <release>3.15.8</release>
+    <api>3.15.8</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2021-04-07</date>
+   <time>14:27:08</time>
+   <license uri="https://opensource.org/licenses/BSD-3-Clause">3-Clause BSD License</license>
+   <notes>
+   </notes>
   </release>
  </changelog>
 </package>

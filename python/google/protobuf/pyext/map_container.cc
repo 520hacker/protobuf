@@ -32,15 +32,16 @@
 
 #include <google/protobuf/pyext/map_container.h>
 
+#include <cstdint>
 #include <memory>
 
 #include <google/protobuf/stubs/logging.h>
 #include <google/protobuf/stubs/common.h>
-#include <google/protobuf/map_field.h>
 #include <google/protobuf/map.h>
+#include <google/protobuf/map_field.h>
 #include <google/protobuf/message.h>
-#include <google/protobuf/pyext/message_factory.h>
 #include <google/protobuf/pyext/message.h>
+#include <google/protobuf/pyext/message_factory.h>
 #include <google/protobuf/pyext/repeated_composite_container.h>
 #include <google/protobuf/pyext/scoped_pyobject_ptr.h>
 #include <google/protobuf/stubs/map_util.h>
@@ -99,7 +100,7 @@ struct MapIterator {
   //
   // We store this so that if the map is modified during iteration we can throw
   // an error.
-  uint64 version;
+  uint64_t version;
 };
 
 Message* MapContainer::GetMutableMessage() {
@@ -339,6 +340,11 @@ PyObject* GetEntryClass(PyObject* _self) {
 
 PyObject* MapReflectionFriend::MergeFrom(PyObject* _self, PyObject* arg) {
   MapContainer* self = GetMap(_self);
+  if (!PyObject_TypeCheck(arg, ScalarMapContainer_Type) &&
+      !PyObject_TypeCheck(arg, MessageMapContainer_Type)) {
+    PyErr_SetString(PyExc_AttributeError, "Not a map field");
+    return nullptr;
+  }
   MapContainer* other_map = GetMap(arg);
   Message* message = self->GetMutableMessage();
   const Message* other_message = other_map->parent->message;
@@ -457,10 +463,11 @@ int MapReflectionFriend::ScalarMapSetItem(PyObject* _self, PyObject* key,
 
 static PyObject* ScalarMapGet(PyObject* self, PyObject* args,
                               PyObject* kwargs) {
-  static char* kwlist[] = {"key", "default", nullptr};
+  static const char* kwlist[] = {"key", "default", nullptr};
   PyObject* key;
   PyObject* default_value = NULL;
-  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O", kwlist, &key,
+  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O",
+                                   const_cast<char**>(kwlist), &key,
                                    &default_value)) {
     return NULL;
   }
@@ -752,10 +759,11 @@ PyObject* MapReflectionFriend::MessageMapToStr(PyObject* _self) {
 }
 
 PyObject* MessageMapGet(PyObject* self, PyObject* args, PyObject* kwargs) {
-  static char* kwlist[] = {"key", "default", nullptr};
+  static const char* kwlist[] = {"key", "default", nullptr};
   PyObject* key;
   PyObject* default_value = NULL;
-  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O", kwlist, &key,
+  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O",
+                                   const_cast<char**>(kwlist), &key,
                                    &default_value)) {
     return NULL;
   }

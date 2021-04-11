@@ -42,10 +42,24 @@
 #include <gtest/gtest.h>
 #include <google/protobuf/stubs/strutil.h>
 
+using proto3_arena_unittest::ForeignMessage;
 using proto3_arena_unittest::TestAllTypes;
 
 namespace google {
 namespace protobuf {
+
+namespace internal {
+
+class Proto3ArenaTestHelper {
+ public:
+  template <typename T>
+  static Arena* GetOwningArena(const T& msg) {
+    return msg.GetOwningArena();
+  }
+};
+
+}  // namespace internal
+
 namespace {
 // We selectively set/check a few representative fields rather than all fields
 // as this test is only expected to cover the basics of arena support.
@@ -143,6 +157,79 @@ TEST(Proto3ArenaTest, UnknownFields) {
       arena_message->GetReflection()->GetUnknownFields(*arena_message).empty());
 }
 
+TEST(Proto3ArenaTest, GetArena) {
+  Arena arena;
+
+  // Tests arena-allocated message and submessages.
+  auto* arena_message1 = Arena::CreateMessage<TestAllTypes>(&arena);
+  auto* arena_submessage1 = arena_message1->mutable_optional_foreign_message();
+  auto* arena_repeated_submessage1 =
+      arena_message1->add_repeated_foreign_message();
+  EXPECT_EQ(&arena, arena_message1->GetArena());
+  EXPECT_EQ(&arena,
+            internal::Proto3ArenaTestHelper::GetOwningArena(*arena_message1));
+  EXPECT_EQ(&arena, arena_submessage1->GetArena());
+  EXPECT_EQ(&arena, arena_repeated_submessage1->GetArena());
+
+  // Tests attached heap-allocated messages.
+  auto* arena_message2 = Arena::CreateMessage<TestAllTypes>(&arena);
+  arena_message2->set_allocated_optional_foreign_message(new ForeignMessage());
+  arena_message2->mutable_repeated_foreign_message()->AddAllocated(
+      new ForeignMessage());
+  const auto& submessage2 = arena_message2->optional_foreign_message();
+  const auto& repeated_submessage2 =
+      arena_message2->repeated_foreign_message(0);
+  EXPECT_EQ(nullptr, submessage2.GetArena());
+  EXPECT_EQ(&arena,
+            internal::Proto3ArenaTestHelper::GetOwningArena(submessage2));
+  EXPECT_EQ(nullptr, repeated_submessage2.GetArena());
+  EXPECT_EQ(&arena, internal::Proto3ArenaTestHelper::GetOwningArena(
+                        repeated_submessage2));
+
+  // Tests message created by Arena::Create.
+  auto* arena_message3 = Arena::Create<TestAllTypes>(&arena);
+  EXPECT_EQ(nullptr, arena_message3->GetArena());
+  EXPECT_EQ(&arena,
+            internal::Proto3ArenaTestHelper::GetOwningArena(*arena_message3));
+}
+
+TEST(Proto3ArenaTest, GetArenaWithUnknown) {
+  Arena arena;
+
+  // Tests arena-allocated message and submessages.
+  auto* arena_message1 = Arena::CreateMessage<TestAllTypes>(&arena);
+  arena_message1->GetReflection()->MutableUnknownFields(arena_message1);
+  auto* arena_submessage1 = arena_message1->mutable_optional_foreign_message();
+  arena_submessage1->GetReflection()->MutableUnknownFields(arena_submessage1);
+  auto* arena_repeated_submessage1 =
+      arena_message1->add_repeated_foreign_message();
+  arena_repeated_submessage1->GetReflection()->MutableUnknownFields(
+      arena_repeated_submessage1);
+  EXPECT_EQ(&arena, arena_message1->GetArena());
+  EXPECT_EQ(&arena,
+            internal::Proto3ArenaTestHelper::GetOwningArena(*arena_message1));
+  EXPECT_EQ(&arena, arena_submessage1->GetArena());
+  EXPECT_EQ(&arena, arena_repeated_submessage1->GetArena());
+
+  // Tests attached heap-allocated messages.
+  auto* arena_message2 = Arena::CreateMessage<TestAllTypes>(&arena);
+  arena_message2->set_allocated_optional_foreign_message(new ForeignMessage());
+  arena_message2->mutable_repeated_foreign_message()->AddAllocated(
+      new ForeignMessage());
+  auto* submessage2 = arena_message2->mutable_optional_foreign_message();
+  submessage2->GetReflection()->MutableUnknownFields(submessage2);
+  auto* repeated_submessage2 =
+      arena_message2->mutable_repeated_foreign_message(0);
+  repeated_submessage2->GetReflection()->MutableUnknownFields(
+      repeated_submessage2);
+  EXPECT_EQ(nullptr, submessage2->GetArena());
+  EXPECT_EQ(&arena,
+            internal::Proto3ArenaTestHelper::GetOwningArena(*submessage2));
+  EXPECT_EQ(nullptr, repeated_submessage2->GetArena());
+  EXPECT_EQ(&arena, internal::Proto3ArenaTestHelper::GetOwningArena(
+                        *repeated_submessage2));
+}
+
 TEST(Proto3ArenaTest, Swap) {
   Arena arena1;
   Arena arena2;
@@ -230,6 +317,35 @@ TEST(Proto3OptionalTest, OptionalFieldDescriptor) {
   }
 }
 
+TEST(Proto3OptionalTest, Extensions) {
+  const DescriptorPool* p = DescriptorPool::generated_pool();
+  const FieldDescriptor* no_optional = p->FindExtensionByName(
+      "protobuf_unittest.Proto3OptionalExtensions.ext_no_optional");
+  const FieldDescriptor* with_optional = p->FindExtensionByName(
+      "protobuf_unittest.Proto3OptionalExtensions.ext_with_optional");
+  GOOGLE_CHECK(no_optional);
+  GOOGLE_CHECK(with_optional);
+  EXPECT_FALSE(no_optional->has_optional_keyword());
+  EXPECT_TRUE(with_optional->has_optional_keyword());
+
+  const Descriptor* d = protobuf_unittest::Proto3OptionalExtensions::descriptor();
+  EXPECT_TRUE(d->options().HasExtension(
+      protobuf_unittest::Proto3OptionalExtensions::ext_no_optional));
+  EXPECT_TRUE(d->options().HasExtension(
+      protobuf_unittest::Proto3OptionalExtensions::ext_with_optional));
+  EXPECT_EQ(8, d->options().GetExtension(
+                   protobuf_unittest::Proto3OptionalExtensions::ext_no_optional));
+  EXPECT_EQ(16,
+            d->options().GetExtension(
+                protobuf_unittest::Proto3OptionalExtensions::ext_with_optional));
+
+  const Descriptor* d2 = protobuf_unittest::TestProto3Optional::descriptor();
+  EXPECT_FALSE(d2->options().HasExtension(
+      protobuf_unittest::Proto3OptionalExtensions::ext_no_optional));
+  EXPECT_FALSE(d2->options().HasExtension(
+      protobuf_unittest::Proto3OptionalExtensions::ext_with_optional));
+}
+
 TEST(Proto3OptionalTest, OptionalField) {
   protobuf_unittest::TestProto3Optional msg;
   EXPECT_FALSE(msg.has_optional_int32());
@@ -291,6 +407,47 @@ TEST(Proto3OptionalTest, OptionalFieldReflection) {
   EXPECT_FALSE(r->HasField(msg, f));
   EXPECT_FALSE(r->HasOneof(msg, o));
   EXPECT_TRUE(r->GetOneofFieldDescriptor(msg, o) == nullptr);
+}
+
+// It's a regression test for b/160665543.
+TEST(Proto3OptionalTest, ClearNonOptionalMessageField) {
+  protobuf_unittest::TestProto3OptionalMessage msg;
+  msg.mutable_nested_message();
+  const google::protobuf::Descriptor* d = msg.GetDescriptor();
+  const google::protobuf::Reflection* r = msg.GetReflection();
+  const google::protobuf::FieldDescriptor* f = d->FindFieldByName("nested_message");
+  r->ClearField(&msg, f);
+}
+
+TEST(Proto3OptionalTest, ClearOptionalMessageField) {
+  protobuf_unittest::TestProto3OptionalMessage msg;
+  msg.mutable_optional_nested_message();
+  const google::protobuf::Descriptor* d = msg.GetDescriptor();
+  const google::protobuf::Reflection* r = msg.GetReflection();
+  const google::protobuf::FieldDescriptor* f =
+      d->FindFieldByName("optional_nested_message");
+  r->ClearField(&msg, f);
+}
+
+TEST(Proto3OptionalTest, SwapNonOptionalMessageField) {
+  protobuf_unittest::TestProto3OptionalMessage msg1;
+  protobuf_unittest::TestProto3OptionalMessage msg2;
+  msg1.mutable_nested_message();
+  const google::protobuf::Descriptor* d = msg1.GetDescriptor();
+  const google::protobuf::Reflection* r = msg1.GetReflection();
+  const google::protobuf::FieldDescriptor* f = d->FindFieldByName("nested_message");
+  r->SwapFields(&msg1, &msg2, {f});
+}
+
+TEST(Proto3OptionalTest, SwapOptionalMessageField) {
+  protobuf_unittest::TestProto3OptionalMessage msg1;
+  protobuf_unittest::TestProto3OptionalMessage msg2;
+  msg1.mutable_optional_nested_message();
+  const google::protobuf::Descriptor* d = msg1.GetDescriptor();
+  const google::protobuf::Reflection* r = msg1.GetReflection();
+  const google::protobuf::FieldDescriptor* f =
+      d->FindFieldByName("optional_nested_message");
+  r->SwapFields(&msg1, &msg2, {f});
 }
 
 void SetAllFieldsZero(protobuf_unittest::TestProto3Optional* msg) {

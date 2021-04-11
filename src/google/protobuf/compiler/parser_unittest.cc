@@ -41,6 +41,7 @@
 
 #include <google/protobuf/test_util2.h>
 #include <google/protobuf/unittest.pb.h>
+#include <google/protobuf/any.pb.h>
 #include <google/protobuf/unittest_custom_options.pb.h>
 #include <google/protobuf/io/tokenizer.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
@@ -2183,7 +2184,7 @@ void SortMessages(FileDescriptorProto* file_descriptor_proto) {
 void StripFieldTypeName(DescriptorProto* proto) {
   for (int i = 0; i < proto->field_size(); ++i) {
     std::string type_name = proto->field(i).type_name();
-    std::string::size_type pos = type_name.find_last_of(".");
+    std::string::size_type pos = type_name.find_last_of('.');
     if (pos != std::string::npos) {
       proto->mutable_field(i)->mutable_type_name()->assign(
           type_name.begin() + pos + 1, type_name.end());
@@ -2276,6 +2277,11 @@ TEST_F(ParseDescriptorDebugTest, TestCustomOptions) {
   FileDescriptorProto import_proto;
   import->CopyTo(&import_proto);
   ASSERT_TRUE(pool_.BuildFile(import_proto) != NULL);
+
+  FileDescriptorProto any_import;
+  google::protobuf::Any::descriptor()->file()->CopyTo(&any_import);
+  ASSERT_TRUE(pool_.BuildFile(any_import) != nullptr);
+
   const FileDescriptor* actual = pool_.BuildFile(parsed);
   ASSERT_TRUE(actual != NULL);
   parsed.Clear();

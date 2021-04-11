@@ -169,11 +169,16 @@ class RepeatedField final {
       "We only support types that have an alignment smaller than Arena");
 
  public:
-  RepeatedField();
+  constexpr RepeatedField();
   explicit RepeatedField(Arena* arena);
+
   RepeatedField(const RepeatedField& other);
-  template <typename Iter>
-  RepeatedField(Iter begin, const Iter& end);
+
+  template <typename Iter,
+            typename = typename std::enable_if<std::is_constructible<
+                Element, decltype(*std::declval<Iter>())>::value>::type>
+  RepeatedField(Iter begin, Iter end);
+
   ~RepeatedField();
 
   RepeatedField& operator=(const RepeatedField& other);
@@ -215,6 +220,10 @@ class RepeatedField final {
   void Clear();
   void MergeFrom(const RepeatedField& other);
   void CopyFrom(const RepeatedField& other);
+
+  // Replaces the contents with RepeatedField(begin, end).
+  template <typename Iter>
+  void Assign(Iter begin, Iter end);
 
   // Reserve space to expand the field to at least the given size.  If the
   // array is grown, it will always be at least doubled in size.
@@ -334,13 +343,12 @@ class RepeatedField final {
   int total_size_;
   struct Rep {
     Arena* arena;
-    Element elements[1];
+    // Here we declare a huge array as a way of approximating C's "flexible
+    // array member" feature without relying on undefined behavior.
+    Element elements[(std::numeric_limits<int>::max() - 2 * sizeof(Arena*)) /
+                     sizeof(Element)];
   };
-  // We can not use sizeof(Rep) - sizeof(Element) due to the trailing padding on
-  // the struct. We can not use sizeof(Arena*) as well because there might be
-  // a "gap" after the field arena and before the field elements (e.g., when
-  // Element is double and pointer is 32bit).
-  static const size_t kRepHeaderSize;
+  static constexpr size_t kRepHeaderSize = offsetof(Rep, elements);
 
   // If total_size_ == 0 this points to an Arena otherwise it points to the
   // elements member of a Rep struct. Using this invariant allows the storage of
@@ -381,14 +389,14 @@ class RepeatedField final {
   void CopyArray(Element* to, const Element* from, int size);
 
   // Internal helper to delete all elements and deallocate the storage.
-  // If Element has a trivial destructor (for example, if it's a fundamental
-  // type, like int32), the loop will be removed by the optimizer.
   void InternalDeallocate(Rep* rep, int size) {
     if (rep != NULL) {
       Element* e = &rep->elements[0];
-      Element* limit = &rep->elements[size];
-      for (; e < limit; e++) {
-        e->~Element();
+      if (!std::is_trivial<Element>::value) {
+        Element* limit = &rep->elements[size];
+        for (; e < limit; e++) {
+          e->~Element();
+        }
       }
       if (rep->arena == NULL) {
 #if defined(__GXX_DELETE_WITH_SIZE__) || defined(__cpp_sized_deallocation)
@@ -439,7 +447,7 @@ class RepeatedField final {
   //
   // The first version executes at 7 cycles per iteration while the second
   // version near 1 or 2 cycles.
-  template <int = 0, bool = std::is_pod<Element>::value>
+  template <int = 0, bool = std::is_trivial<Element>::value>
   class FastAdderImpl {
    public:
     explicit FastAdderImpl(RepeatedField* rf) : repeated_field_(rf) {
@@ -487,10 +495,6 @@ class RepeatedField final {
   friend class ::google::protobuf::internal::ParseContext;
 };
 
-template <typename Element>
-const size_t RepeatedField<Element>::kRepHeaderSize =
-    reinterpret_cast<size_t>(&reinterpret_cast<Rep*>(16)->elements[0]) - 16;
-
 namespace internal {
 template <typename It>
 class RepeatedPtrIterator;
@@ -505,8 +509,7 @@ namespace internal {
 // shouldn't be necessary, but our compiler doesn't optimize std::copy very
 // effectively.
 template <typename Element,
-          bool HasTrivialCopy =
-              std::is_pod<Element>::value>
+          bool HasTrivialCopy = std::is_trivial<Element>::value>
 struct ElementCopier {
   void operator()(Element* to, const Element* from, int array_size);
 };
@@ -582,7 +585,7 @@ struct IsMovable
 //   };
 class PROTOBUF_EXPORT RepeatedPtrFieldBase {
  protected:
-  RepeatedPtrFieldBase();
+  constexpr RepeatedPtrFieldBase();
   explicit RepeatedPtrFieldBase(Arena* arena);
   ~RepeatedPtrFieldBase() {
 #ifndef NDEBUG
@@ -662,7 +665,7 @@ class PROTOBUF_EXPORT RepeatedPtrFieldBase {
   const typename TypeHandler::Type* const* data() const;
 
   template <typename TypeHandler>
-  PROTOBUF_ALWAYS_INLINE void Swap(RepeatedPtrFieldBase* other);
+  PROTOBUF_NDEBUG_INLINE void Swap(RepeatedPtrFieldBase* other);
 
   void SwapElements(int index1, int index2);
 
@@ -741,9 +744,12 @@ class PROTOBUF_EXPORT RepeatedPtrFieldBase {
   int total_size_;
   struct Rep {
     int allocated_size;
-    void* elements[1];
+    // Here we declare a huge array as a way of approximating C's "flexible
+    // array member" feature without relying on undefined behavior.
+    void* elements[(std::numeric_limits<int>::max() - 2 * sizeof(int)) /
+                   sizeof(void*)];
   };
-  static constexpr size_t kRepHeaderSize = sizeof(Rep) - sizeof(void*);
+  static constexpr size_t kRepHeaderSize = offsetof(Rep, elements);
   Rep* rep_;
 
   template <typename TypeHandler>
@@ -763,14 +769,20 @@ class PROTOBUF_EXPORT RepeatedPtrFieldBase {
                                                                   int));
 
   template <typename TypeHandler>
-  void MergeFromInnerLoop(void** our_elems, void** other_elems, int length,
-                          int already_allocated);
+  PROTOBUF_NOINLINE void MergeFromInnerLoop(void** our_elems,
+                                            void** other_elems, int length,
+                                            int already_allocated);
 
   // Internal helper: extend array space if necessary to contain |extend_amount|
   // more elements, and return a pointer to the element immediately following
   // the old list of elements.  This interface factors out common behavior from
   // Reserve() and MergeFrom() to reduce code size. |extend_amount| must be > 0.
   void** InternalExtend(int extend_amount);
+
+  // Internal helper for Add: add "obj" as the next element in the
+  // array, including potentially resizing the array with Reserve if
+  // needed
+  void* AddOutOfLineHelper(void* obj);
 
   // The reflection implementation needs to call protected methods directly,
   // reinterpreting pointers as being to Message instead of a specific Message
@@ -922,12 +934,16 @@ class StringTypeHandler {
 template <typename Element>
 class RepeatedPtrField final : private internal::RepeatedPtrFieldBase {
  public:
-  RepeatedPtrField();
+  constexpr RepeatedPtrField();
   explicit RepeatedPtrField(Arena* arena);
 
   RepeatedPtrField(const RepeatedPtrField& other);
-  template <typename Iter>
-  RepeatedPtrField(Iter begin, const Iter& end);
+
+  template <typename Iter,
+            typename = typename std::enable_if<std::is_constructible<
+                Element, decltype(*std::declval<Iter>())>::value>::type>
+  RepeatedPtrField(Iter begin, Iter end);
+
   ~RepeatedPtrField();
 
   RepeatedPtrField& operator=(const RepeatedPtrField& other);
@@ -942,6 +958,10 @@ class RepeatedPtrField final : private internal::RepeatedPtrFieldBase {
   Element* Mutable(int index);
   Element* Add();
   void Add(Element&& value);
+  // Append elements in the range [begin, end) after reserving
+  // the appropriate number of elements.
+  template <typename Iter>
+  void Add(Iter begin, Iter end);
 
   const Element& operator[](int index) const { return Get(index); }
   Element& operator[](int index) { return *Mutable(index); }
@@ -961,6 +981,10 @@ class RepeatedPtrField final : private internal::RepeatedPtrFieldBase {
   void Clear();
   void MergeFrom(const RepeatedPtrField& other);
   void CopyFrom(const RepeatedPtrField& other);
+
+  // Replaces the contents with RepeatedPtrField(begin, end).
+  template <typename Iter>
+  void Assign(Iter begin, Iter end);
 
   // Reserve space to expand the field to at least the given size.  This only
   // resizes the pointer array; it doesn't allocate any objects.  If the
@@ -1182,7 +1206,7 @@ class RepeatedPtrField final : private internal::RepeatedPtrFieldBase {
 // implementation ====================================================
 
 template <typename Element>
-inline RepeatedField<Element>::RepeatedField()
+constexpr RepeatedField<Element>::RepeatedField()
     : current_size_(0), total_size_(0), arena_or_elements_(nullptr) {}
 
 template <typename Element>
@@ -1200,14 +1224,20 @@ inline RepeatedField<Element>::RepeatedField(const RepeatedField& other)
 }
 
 template <typename Element>
-template <typename Iter>
-RepeatedField<Element>::RepeatedField(Iter begin, const Iter& end)
+template <typename Iter, typename>
+RepeatedField<Element>::RepeatedField(Iter begin, Iter end)
     : current_size_(0), total_size_(0), arena_or_elements_(nullptr) {
   Add(begin, end);
 }
 
 template <typename Element>
 RepeatedField<Element>::~RepeatedField() {
+#ifndef NDEBUG
+  // Try to trigger segfault / asan failure in non-opt builds. If arena_
+  // lifetime has ended before the destructor.
+  auto arena = GetArena();
+  if (arena) (void)arena->SpaceAllocated();
+#endif
   if (total_size_ > 0) {
     InternalDeallocate(rep(), total_size_);
   }
@@ -1431,6 +1461,13 @@ inline void RepeatedField<Element>::CopyFrom(const RepeatedField& other) {
 }
 
 template <typename Element>
+template <typename Iter>
+inline void RepeatedField<Element>::Assign(Iter begin, Iter end) {
+  Clear();
+  Add(begin, end);
+}
+
+template <typename Element>
 inline typename RepeatedField<Element>::iterator RepeatedField<Element>::erase(
     const_iterator position) {
   return erase(position, position + 1);
@@ -1649,7 +1686,7 @@ struct ElementCopier<Element, true> {
 
 namespace internal {
 
-inline RepeatedPtrFieldBase::RepeatedPtrFieldBase()
+constexpr RepeatedPtrFieldBase::RepeatedPtrFieldBase()
     : arena_(NULL), current_size_(0), total_size_(0), rep_(NULL) {}
 
 inline RepeatedPtrFieldBase::RepeatedPtrFieldBase(Arena* arena)
@@ -1744,14 +1781,10 @@ inline typename TypeHandler::Type* RepeatedPtrFieldBase::Add(
   if (rep_ != NULL && current_size_ < rep_->allocated_size) {
     return cast<TypeHandler>(rep_->elements[current_size_++]);
   }
-  if (!rep_ || rep_->allocated_size == total_size_) {
-    Reserve(total_size_ + 1);
-  }
-  ++rep_->allocated_size;
   typename TypeHandler::Type* result =
       TypeHandler::NewFromPrototype(prototype, arena_);
-  rep_->elements[current_size_++] = result;
-  return result;
+  return reinterpret_cast<typename TypeHandler::Type*>(
+      AddOutOfLineHelper(result));
 }
 
 template <typename TypeHandler,
@@ -1825,25 +1858,25 @@ template <typename TypeHandler>
 void RepeatedPtrFieldBase::MergeFromInnerLoop(void** our_elems,
                                               void** other_elems, int length,
                                               int already_allocated) {
-  // Split into two loops, over ranges [0, allocated) and [allocated, length),
-  // to avoid a branch within the loop.
-  for (int i = 0; i < already_allocated && i < length; i++) {
+  if (already_allocated < length) {
+    Arena* arena = GetArena();
+    typename TypeHandler::Type* elem_prototype =
+        reinterpret_cast<typename TypeHandler::Type*>(other_elems[0]);
+    for (int i = already_allocated; i < length; i++) {
+      // Allocate a new empty element that we'll merge into below
+      typename TypeHandler::Type* new_elem =
+          TypeHandler::NewFromPrototype(elem_prototype, arena);
+      our_elems[i] = new_elem;
+    }
+  }
+  // Main loop that does the actual merging
+  for (int i = 0; i < length; i++) {
     // Already allocated: use existing element.
     typename TypeHandler::Type* other_elem =
         reinterpret_cast<typename TypeHandler::Type*>(other_elems[i]);
     typename TypeHandler::Type* new_elem =
         reinterpret_cast<typename TypeHandler::Type*>(our_elems[i]);
     TypeHandler::Merge(*other_elem, new_elem);
-  }
-  Arena* arena = GetArena();
-  for (int i = already_allocated; i < length; i++) {
-    // Not allocated: alloc a new element first, then merge it.
-    typename TypeHandler::Type* other_elem =
-        reinterpret_cast<typename TypeHandler::Type*>(other_elems[i]);
-    typename TypeHandler::Type* new_elem =
-        TypeHandler::NewFromPrototype(other_elem, arena);
-    TypeHandler::Merge(*other_elem, new_elem);
-    our_elems[i] = new_elem;
   }
 }
 
@@ -2092,7 +2125,8 @@ class RepeatedPtrField<std::string>::TypeHandler
     : public internal::StringTypeHandler {};
 
 template <typename Element>
-inline RepeatedPtrField<Element>::RepeatedPtrField() : RepeatedPtrFieldBase() {}
+constexpr RepeatedPtrField<Element>::RepeatedPtrField()
+    : RepeatedPtrFieldBase() {}
 
 template <typename Element>
 inline RepeatedPtrField<Element>::RepeatedPtrField(Arena* arena)
@@ -2106,16 +2140,9 @@ inline RepeatedPtrField<Element>::RepeatedPtrField(
 }
 
 template <typename Element>
-template <typename Iter>
-inline RepeatedPtrField<Element>::RepeatedPtrField(Iter begin,
-                                                   const Iter& end) {
-  int reserve = internal::CalculateReserve(begin, end);
-  if (reserve != -1) {
-    Reserve(reserve);
-  }
-  for (; begin != end; ++begin) {
-    *Add() = *begin;
-  }
+template <typename Iter, typename>
+inline RepeatedPtrField<Element>::RepeatedPtrField(Iter begin, Iter end) {
+  Add(begin, end);
 }
 
 template <typename Element>
@@ -2198,6 +2225,18 @@ inline Element* RepeatedPtrField<Element>::Add() {
 template <typename Element>
 inline void RepeatedPtrField<Element>::Add(Element&& value) {
   RepeatedPtrFieldBase::Add<TypeHandler>(std::move(value));
+}
+
+template <typename Element>
+template <typename Iter>
+inline void RepeatedPtrField<Element>::Add(Iter begin, Iter end) {
+  int reserve = internal::CalculateReserve(begin, end);
+  if (reserve != -1) {
+    Reserve(size() + reserve);
+  }
+  for (; begin != end; ++begin) {
+    *Add() = *begin;
+  }
 }
 
 template <typename Element>
@@ -2304,6 +2343,13 @@ inline void RepeatedPtrField<Element>::MergeFrom(
 template <typename Element>
 inline void RepeatedPtrField<Element>::CopyFrom(const RepeatedPtrField& other) {
   RepeatedPtrFieldBase::CopyFrom<TypeHandler>(other);
+}
+
+template <typename Element>
+template <typename Iter>
+inline void RepeatedPtrField<Element>::Assign(Iter begin, Iter end) {
+  Clear();
+  Add(begin, end);
 }
 
 template <typename Element>

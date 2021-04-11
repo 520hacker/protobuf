@@ -300,7 +300,7 @@ const FieldDescriptor* GetFieldForOneofType(FieldDescriptor::Type type,
 }
 
 string UpperCase(string str) {
-  for (int i = 0; i < str.size(); i++) {
+  for (size_t i = 0; i < str.size(); i++) {
     str[i] = toupper(str[i]);
   }
   return str;
@@ -3051,6 +3051,29 @@ void BinaryAndJsonConformanceSuite::RunJsonTestsForValue() {
           }
         ]
       )");
+  RunValidJsonTestWithValidator(
+      "NullValueInOtherOneofOldFormat", RECOMMENDED,
+      R"({"oneofNullValue": "NULL_VALUE"})",
+      [](const Json::Value& value) {
+        return (value.isMember("oneofNullValue") &&
+                value["oneofNullValue"].isNull());
+      },
+      true);
+  RunValidJsonTestWithValidator(
+      "NullValueInOtherOneofNewFormat", RECOMMENDED,
+      R"({"oneofNullValue": null})",
+      [](const Json::Value& value) {
+        return (value.isMember("oneofNullValue") &&
+                value["oneofNullValue"].isNull());
+      },
+      true);
+  RunValidJsonTestWithValidator(
+      "NullValueInNormalMessage", RECOMMENDED,
+      R"({"optionalNullValue": null})",
+      [](const Json::Value& value) {
+        return value.empty();
+      },
+      true);
 }
 
 void BinaryAndJsonConformanceSuite::RunJsonTestsForAny() {

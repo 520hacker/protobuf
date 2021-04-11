@@ -65,6 +65,11 @@ namespace {
 using ::protobuf_unittest::TestAllTypes;
 using ::testing::ElementsAre;
 
+TEST(RepeatedField, ConstInit) {
+  PROTOBUF_CONSTINIT static RepeatedField<int> field{};  // NOLINT
+  EXPECT_TRUE(field.empty());
+}
+
 // Test operations on a small RepeatedField.
 TEST(RepeatedField, Small) {
   RepeatedField<int> field;
@@ -328,10 +333,18 @@ TEST(RepeatedField, ReserveHuge) {
   EXPECT_GE(huge_field.Capacity(), min_clamping_size);
   ASSERT_LT(huge_field.Capacity(), std::numeric_limits<int>::max() - 1);
 
+#ifndef ADDRESS_SANITIZER
+  // The array containing all the fields is, in theory, up to MAXINT-1 in size.
+  // However, some compilers can't handle a struct whose size is larger
+  // than 2GB, and the protocol buffer format doesn't handle more than 2GB of
+  // data at once, either.  So we limit it, but the code below accesses beyond
+  // that limit.
+
   // Allocation may return more memory than we requested. However, the updated
   // size must still be clamped to a valid range.
   huge_field.Reserve(huge_field.Capacity() + 1);
   EXPECT_EQ(huge_field.Capacity(), std::numeric_limits<int>::max());
+#endif
 #endif  // PROTOBUF_TEST_ALLOW_LARGE_ALLOC
 }
 
@@ -473,6 +486,30 @@ TEST(RepeatedField, AddRange5) {
   ASSERT_EQ(me.size(), 2);
   ASSERT_EQ(me.Get(0), 1);
   ASSERT_EQ(me.Get(1), 2);
+}
+
+TEST(RepeatedField, AddAndAssignRanges) {
+  RepeatedField<int> field;
+
+  int vals[] = {2, 27, 2875, 609250};
+  field.Assign(std::begin(vals), std::end(vals));
+
+  ASSERT_EQ(field.size(), 4);
+  EXPECT_EQ(field.Get(0), 2);
+  EXPECT_EQ(field.Get(1), 27);
+  EXPECT_EQ(field.Get(2), 2875);
+  EXPECT_EQ(field.Get(3), 609250);
+
+  field.Add(std::begin(vals), std::end(vals));
+  ASSERT_EQ(field.size(), 8);
+  EXPECT_EQ(field.Get(0), 2);
+  EXPECT_EQ(field.Get(1), 27);
+  EXPECT_EQ(field.Get(2), 2875);
+  EXPECT_EQ(field.Get(3), 609250);
+  EXPECT_EQ(field.Get(4), 2);
+  EXPECT_EQ(field.Get(5), 27);
+  EXPECT_EQ(field.Get(6), 2875);
+  EXPECT_EQ(field.Get(7), 609250);
 }
 
 TEST(RepeatedField, CopyConstruct) {
@@ -819,6 +856,50 @@ TEST(RepeatedField, TestSAddFromSelf) {
 // RepeatedPtrField tests.  These pretty much just mirror the RepeatedField
 // tests above.
 
+TEST(RepeatedPtrField, ConstInit) {
+  PROTOBUF_CONSTINIT static RepeatedPtrField<std::string> field{};  // NOLINT
+  EXPECT_TRUE(field.empty());
+}
+
+// This helper overload set tests whether X::f can be called with a braced pair,
+// X::f({a, b}) of std::string iterators (specifically, pointers: That call is
+// ambiguous if and only if the call to ValidResolutionPointerRange is not.
+template <typename X>
+auto ValidResolutionPointerRange(const std::string* p)
+    -> decltype(X::f({p, p + 2}), std::true_type{});
+template <typename X>
+std::false_type ValidResolutionPointerRange(void*);
+
+TEST(RepeatedPtrField, UnambiguousConstructor) {
+  struct X {
+    static bool f(std::vector<std::string>) { return false; }
+    static bool f(google::protobuf::RepeatedPtrField<std::string>) { return true; }
+
+    static bool g(std::vector<int>) { return false; }
+    static bool g(google::protobuf::RepeatedPtrField<std::string>) { return true; }
+  };
+
+  // RepeatedPtrField has no initializer-list constructor, and a constructor
+  // from to const char* values is excluded by its constraints.
+  EXPECT_FALSE(X::f({"abc", "xyz"}));
+
+  // Construction from a pair of int* is also not ambiguous.
+  int a[5] = {};
+  EXPECT_FALSE(X::g({a, a + 5}));
+
+  // Construction from string iterators for the unique string overload "g"
+  // works.
+  std::string b[2] = {"abc", "xyz"};
+  // Disabling this for now, this is actually ambiguous with libstdc++.
+  // EXPECT_TRUE(X::g({b, b + 2}));
+
+  // Construction from string iterators for "f" is ambiguous, since both
+  // containers are equally good.
+  //
+  // X::f({b, b + 2});  // error => ValidResolutionPointerRange is unambiguous.
+  EXPECT_FALSE(decltype(ValidResolutionPointerRange<X>(nullptr))::value);
+}
+
 TEST(RepeatedPtrField, Small) {
   RepeatedPtrField<std::string> field;
 
@@ -879,6 +960,30 @@ TEST(RepeatedPtrField, Large) {
 
   int min_expected_usage = 16 * sizeof(std::string);
   EXPECT_GE(field.SpaceUsedExcludingSelf(), min_expected_usage);
+}
+
+TEST(RepeatedPtrField, AddAndAssignRanges) {
+  RepeatedPtrField<std::string> field;
+
+  const char* vals[] = {"abc", "x", "yz", "xyzzy"};
+  field.Assign(std::begin(vals), std::end(vals));
+
+  ASSERT_EQ(field.size(), 4);
+  EXPECT_EQ(field.Get(0), "abc");
+  EXPECT_EQ(field.Get(1), "x");
+  EXPECT_EQ(field.Get(2), "yz");
+  EXPECT_EQ(field.Get(3), "xyzzy");
+
+  field.Add(std::begin(vals), std::end(vals));
+  ASSERT_EQ(field.size(), 8);
+  EXPECT_EQ(field.Get(0), "abc");
+  EXPECT_EQ(field.Get(1), "x");
+  EXPECT_EQ(field.Get(2), "yz");
+  EXPECT_EQ(field.Get(3), "xyzzy");
+  EXPECT_EQ(field.Get(4), "abc");
+  EXPECT_EQ(field.Get(5), "x");
+  EXPECT_EQ(field.Get(6), "yz");
+  EXPECT_EQ(field.Get(7), "xyzzy");
 }
 
 TEST(RepeatedPtrField, SwapSmallSmall) {
@@ -2072,3 +2177,5 @@ TEST_F(RepeatedFieldInsertionIteratorsTest, MoveProtos) {
 
 }  // namespace protobuf
 }  // namespace google
+
+#include <google/protobuf/port_undef.inc>

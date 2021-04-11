@@ -36,7 +36,6 @@
 
 #include <google/protobuf/stubs/logging.h>
 #include <google/protobuf/stubs/common.h>
-#include <google/protobuf/stubs/logging.h>
 #include <google/protobuf/test_util.h>
 #include <google/protobuf/test_util2.h>
 #include <google/protobuf/unittest.pb.h>
@@ -49,6 +48,7 @@
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/wire_format_lite.h>
 #include <google/protobuf/testing/googletest.h>
+#include <google/protobuf/stubs/logging.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <google/protobuf/stubs/casts.h>
@@ -1526,3 +1526,5 @@ TEST(RepeatedVarint, Enum) {
 }  // namespace internal
 }  // namespace protobuf
 }  // namespace google
+
+#include <google/protobuf/port_undef.inc>

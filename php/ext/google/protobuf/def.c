@@ -103,8 +103,8 @@ PHP_METHOD(EnumValueDescriptor, getNumber) {
 }
 
 static zend_function_entry EnumValueDescriptor_methods[] = {
-  PHP_ME(EnumValueDescriptor, getName, NULL, ZEND_ACC_PUBLIC)
-  PHP_ME(EnumValueDescriptor, getNumber, NULL, ZEND_ACC_PUBLIC)
+  PHP_ME(EnumValueDescriptor, getName, arginfo_void, ZEND_ACC_PUBLIC)
+  PHP_ME(EnumValueDescriptor, getNumber, arginfo_void, ZEND_ACC_PUBLIC)
   ZEND_FE_END
 };
 
@@ -180,8 +180,7 @@ PHP_METHOD(EnumDescriptor, getValue) {
   zend_long index;
   zval ret;
 
-  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &index) ==
-      FAILURE) {
+  if (zend_parse_parameters(ZEND_NUM_ARGS(), "l", &index) == FAILURE) {
     zend_error(E_USER_ERROR, "Expect integer for index.\n");
     return;
   }
@@ -225,9 +224,9 @@ PHP_METHOD(EnumDescriptor, getPublicDescriptor) {
 }
 
 static zend_function_entry EnumDescriptor_methods[] = {
-  PHP_ME(EnumDescriptor, getPublicDescriptor, NULL, ZEND_ACC_PUBLIC)
-  PHP_ME(EnumDescriptor, getValueCount, NULL, ZEND_ACC_PUBLIC)
-  PHP_ME(EnumDescriptor, getValue, NULL, ZEND_ACC_PUBLIC)
+  PHP_ME(EnumDescriptor, getPublicDescriptor, arginfo_void, ZEND_ACC_PUBLIC)
+  PHP_ME(EnumDescriptor, getValueCount, arginfo_void, ZEND_ACC_PUBLIC)
+  PHP_ME(EnumDescriptor, getValue, arginfo_void, ZEND_ACC_PUBLIC)
   ZEND_FE_END
 };
 
@@ -284,8 +283,7 @@ PHP_METHOD(OneofDescriptor, getField) {
   zend_long index;
   zval ret;
 
-  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &index) ==
-      FAILURE) {
+  if (zend_parse_parameters(ZEND_NUM_ARGS(), "l", &index) == FAILURE) {
     zend_error(E_USER_ERROR, "Expect integer for index.\n");
     return;
   }
@@ -318,9 +316,9 @@ PHP_METHOD(OneofDescriptor, getFieldCount) {
 }
 
 static zend_function_entry OneofDescriptor_methods[] = {
-  PHP_ME(OneofDescriptor, getName,  NULL, ZEND_ACC_PUBLIC)
-  PHP_ME(OneofDescriptor, getField, NULL, ZEND_ACC_PUBLIC)
-  PHP_ME(OneofDescriptor, getFieldCount, NULL, ZEND_ACC_PUBLIC)
+  PHP_ME(OneofDescriptor, getName,  arginfo_void, ZEND_ACC_PUBLIC)
+  PHP_ME(OneofDescriptor, getField, arginfo_void, ZEND_ACC_PUBLIC)
+  PHP_ME(OneofDescriptor, getFieldCount, arginfo_void, ZEND_ACC_PUBLIC)
   ZEND_FE_END
 };
 
@@ -482,13 +480,13 @@ PHP_METHOD(FieldDescriptor, getMessageType) {
 }
 
 static zend_function_entry FieldDescriptor_methods[] = {
-  PHP_ME(FieldDescriptor, getName,   NULL, ZEND_ACC_PUBLIC)
-  PHP_ME(FieldDescriptor, getNumber, NULL, ZEND_ACC_PUBLIC)
-  PHP_ME(FieldDescriptor, getLabel,  NULL, ZEND_ACC_PUBLIC)
-  PHP_ME(FieldDescriptor, getType,   NULL, ZEND_ACC_PUBLIC)
-  PHP_ME(FieldDescriptor, isMap,     NULL, ZEND_ACC_PUBLIC)
-  PHP_ME(FieldDescriptor, getEnumType, NULL, ZEND_ACC_PUBLIC)
-  PHP_ME(FieldDescriptor, getMessageType, NULL, ZEND_ACC_PUBLIC)
+  PHP_ME(FieldDescriptor, getName,   arginfo_void, ZEND_ACC_PUBLIC)
+  PHP_ME(FieldDescriptor, getNumber, arginfo_void, ZEND_ACC_PUBLIC)
+  PHP_ME(FieldDescriptor, getLabel,  arginfo_void, ZEND_ACC_PUBLIC)
+  PHP_ME(FieldDescriptor, getType,   arginfo_void, ZEND_ACC_PUBLIC)
+  PHP_ME(FieldDescriptor, isMap,     arginfo_void, ZEND_ACC_PUBLIC)
+  PHP_ME(FieldDescriptor, getEnumType, arginfo_void, ZEND_ACC_PUBLIC)
+  PHP_ME(FieldDescriptor, getMessageType, arginfo_void, ZEND_ACC_PUBLIC)
   ZEND_FE_END
 };
 
@@ -615,8 +613,7 @@ PHP_METHOD(Descriptor, getField) {
   zval ret;
   zend_long index;
 
-  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &index) ==
-      FAILURE) {
+  if (zend_parse_parameters(ZEND_NUM_ARGS(), "l", &index) == FAILURE) {
     zend_error(E_USER_ERROR, "Expect integer for index.\n");
     return;
   }
@@ -658,8 +655,7 @@ PHP_METHOD(Descriptor, getOneofDecl) {
   zend_long index;
   zval ret;
 
-  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &index) ==
-      FAILURE) {
+  if (zend_parse_parameters(ZEND_NUM_ARGS(), "l", &index) == FAILURE) {
     zend_error(E_USER_ERROR, "Expect integer for index.\n");
     return;
   }
@@ -704,13 +700,13 @@ PHP_METHOD(Descriptor, getClass) {
 
 
 static zend_function_entry Descriptor_methods[] = {
-  PHP_ME(Descriptor, getClass, NULL, ZEND_ACC_PUBLIC)
-  PHP_ME(Descriptor, getFullName, NULL, ZEND_ACC_PUBLIC)
-  PHP_ME(Descriptor, getField, NULL, ZEND_ACC_PUBLIC)
-  PHP_ME(Descriptor, getFieldCount, NULL, ZEND_ACC_PUBLIC)
-  PHP_ME(Descriptor, getOneofDecl, NULL, ZEND_ACC_PUBLIC)
-  PHP_ME(Descriptor, getOneofDeclCount, NULL, ZEND_ACC_PUBLIC)
-  PHP_ME(Descriptor, getPublicDescriptor, NULL, ZEND_ACC_PUBLIC)
+  PHP_ME(Descriptor, getClass, arginfo_void, ZEND_ACC_PUBLIC)
+  PHP_ME(Descriptor, getFullName, arginfo_void, ZEND_ACC_PUBLIC)
+  PHP_ME(Descriptor, getField, arginfo_void, ZEND_ACC_PUBLIC)
+  PHP_ME(Descriptor, getFieldCount, arginfo_void, ZEND_ACC_PUBLIC)
+  PHP_ME(Descriptor, getOneofDecl, arginfo_void, ZEND_ACC_PUBLIC)
+  PHP_ME(Descriptor, getOneofDeclCount, arginfo_void, ZEND_ACC_PUBLIC)
+  PHP_ME(Descriptor, getPublicDescriptor, arginfo_void, ZEND_ACC_PUBLIC)
   ZEND_FE_END
 };
 
@@ -776,6 +772,7 @@ upb_symtab *DescriptorPool_GetSymbolTable() {
   return intern->symtab;
 }
 
+
 /*
  * DescriptorPool::getGeneratedPool()
  *
@@ -799,8 +796,8 @@ PHP_METHOD(DescriptorPool, getDescriptorByClassName) {
   zend_string *str;
   zval ret;
 
-  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &classname,
-                            &classname_len) == FAILURE) {
+  if (zend_parse_parameters(ZEND_NUM_ARGS(), "s", &classname, &classname_len) ==
+      FAILURE) {
     return;
   }
 
@@ -828,8 +825,8 @@ PHP_METHOD(DescriptorPool, getEnumDescriptorByClassName) {
   zend_string *str;
   zval ret;
 
-  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &classname,
-                            &classname_len) == FAILURE) {
+  if (zend_parse_parameters(ZEND_NUM_ARGS(), "s", &classname, &classname_len) ==
+      FAILURE) {
     return;
   }
 
@@ -856,8 +853,8 @@ PHP_METHOD(DescriptorPool, getDescriptorByProtoName) {
   zend_long protoname_len;
   const upb_msgdef *m;
 
-  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &protoname,
-                            &protoname_len) == FAILURE) {
+  if (zend_parse_parameters(ZEND_NUM_ARGS(), "s", &protoname, &protoname_len) ==
+      FAILURE) {
     return;
   }
 
@@ -910,13 +907,41 @@ static void add_name_mappings(const upb_filedef *file) {
   }
 }
 
+static void add_descriptor(DescriptorPool *pool,
+                           const google_protobuf_FileDescriptorProto *file) {
+  upb_strview name = google_protobuf_FileDescriptorProto_name(file);
+  upb_status status;
+  const upb_filedef *file_def;
+  upb_status_clear(&status);
+
+  if (upb_symtab_lookupfile2(pool->symtab, name.data, name.size)) {
+    // Already added.
+    zend_error(E_USER_WARNING,
+               "proto descriptor was previously loaded (included in multiple "
+               "metadata bundles?): " UPB_STRVIEW_FORMAT,
+               UPB_STRVIEW_ARGS(name));
+    return;
+  }
+
+  // The PHP code generator currently special-cases descriptor.proto.  It
+  // doesn't add it as a dependency even if the proto file actually does
+  // depend on it.
+  if (depends_on_descriptor(file)) {
+    google_protobuf_FileDescriptorProto_getmsgdef(pool->symtab);
+  }
+
+  file_def = upb_symtab_addfile(pool->symtab, file, &status);
+  CheckUpbStatus(&status, "Unable to load descriptor");
+  add_name_mappings(file_def);
+}
+
 /*
- * add_name_mappings()
+ * add_descriptor()
  *
  * Adds the given descriptor data to this DescriptorPool.
  */
-static void add_descriptor(DescriptorPool *pool, const char *data,
-                           int data_len, upb_arena *arena) {
+static void add_descriptor_set(DescriptorPool *pool, const char *data,
+                               int data_len, upb_arena *arena) {
   size_t i, n;
   google_protobuf_FileDescriptorSet *set;
   const google_protobuf_FileDescriptorProto* const* files;
@@ -932,27 +957,28 @@ static void add_descriptor(DescriptorPool *pool, const char *data,
 
   for (i = 0; i < n; i++) {
     const google_protobuf_FileDescriptorProto* file = files[i];
-    upb_strview name = google_protobuf_FileDescriptorProto_name(file);
-    upb_status status;
-    const upb_filedef *file_def;
-    upb_status_clear(&status);
-
-    if (upb_symtab_lookupfile2(pool->symtab, name.data, name.size)) {
-      // Already added.
-      continue;
-    }
-
-    // The PHP code generator currently special-cases descriptor.proto.  It
-    // doesn't add it as a dependency even if the proto file actually does
-    // depend on it.
-    if (depends_on_descriptor(file)) {
-      google_protobuf_FileDescriptorProto_getmsgdef(pool->symtab);
-    }
-
-    file_def = upb_symtab_addfile(pool->symtab, file, &status);
-    CheckUpbStatus(&status, "Unable to load descriptor");
-    add_name_mappings(file_def);
+    add_descriptor(pool, file);
   }
+}
+
+bool DescriptorPool_HasFile(const char *filename) {
+  DescriptorPool *intern = GetPool(get_generated_pool());
+  return upb_symtab_lookupfile(intern->symtab, filename) != NULL;
+}
+
+void DescriptorPool_AddDescriptor(const char *filename, const char *data,
+                                  int size) {
+  upb_arena *arena = upb_arena_new();
+  const google_protobuf_FileDescriptorProto *file =
+      google_protobuf_FileDescriptorProto_parse(data, size, arena);
+
+  if (!file) {
+    zend_error(E_ERROR, "Failed to parse binary descriptor for %s\n", filename);
+    return;
+  }
+
+  add_descriptor(GetPool(get_generated_pool()), file);
+  upb_arena_free(arena);
 }
 
 /*
@@ -973,17 +999,51 @@ PHP_METHOD(DescriptorPool, internalAddGeneratedFile) {
   }
 
   arena = upb_arena_new();
-  add_descriptor(intern, data, data_len, arena);
+  add_descriptor_set(intern, data, data_len, arena);
   upb_arena_free(arena);
 }
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_addgeneratedfile, 0, 0, 2)
+  ZEND_ARG_INFO(0, data)
+  ZEND_ARG_INFO(0, data_len)
+ZEND_END_ARG_INFO()
+
 static zend_function_entry DescriptorPool_methods[] = {
-  PHP_ME(DescriptorPool, getGeneratedPool, NULL,
+  PHP_ME(DescriptorPool, getGeneratedPool, arginfo_void,
          ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
-  PHP_ME(DescriptorPool, getDescriptorByClassName, NULL, ZEND_ACC_PUBLIC)
-  PHP_ME(DescriptorPool, getDescriptorByProtoName, NULL, ZEND_ACC_PUBLIC)
-  PHP_ME(DescriptorPool, getEnumDescriptorByClassName, NULL, ZEND_ACC_PUBLIC)
-  PHP_ME(DescriptorPool, internalAddGeneratedFile, NULL, ZEND_ACC_PUBLIC)
+  PHP_ME(DescriptorPool, getDescriptorByClassName, arginfo_void, ZEND_ACC_PUBLIC)
+  PHP_ME(DescriptorPool, getDescriptorByProtoName, arginfo_void, ZEND_ACC_PUBLIC)
+  PHP_ME(DescriptorPool, getEnumDescriptorByClassName, arginfo_void, ZEND_ACC_PUBLIC)
+  PHP_ME(DescriptorPool, internalAddGeneratedFile, arginfo_addgeneratedfile, ZEND_ACC_PUBLIC)
+  ZEND_FE_END
+};
+
+// -----------------------------------------------------------------------------
+// InternalDescriptorPool
+// -----------------------------------------------------------------------------
+
+// For the C extension, Google\Protobuf\Internal\DescriptorPool is not a
+// separate instantiable object, it just returns a
+// Google\Protobuf\DescriptorPool.
+
+zend_class_entry *InternalDescriptorPool_class_entry;
+
+/*
+ * InternalDescriptorPool::getGeneratedPool()
+ *
+ * Returns the generated DescriptorPool. Note that this is identical to
+ * DescriptorPool::getGeneratedPool(), and in fact returns a DescriptorPool
+ * instance.
+ */
+PHP_METHOD(InternalDescriptorPool, getGeneratedPool) {
+  zval ret;
+  ZVAL_COPY(&ret, get_generated_pool());
+  RETURN_ZVAL(&ret, 0, 1);
+}
+
+static zend_function_entry InternalDescriptorPool_methods[] = {
+  PHP_ME(InternalDescriptorPool, getGeneratedPool, arginfo_void,
+         ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
   ZEND_FE_END
 };
 
@@ -1048,7 +1108,7 @@ void Def_ModuleInit() {
   h = &FieldDescriptor_object_handlers;
   memcpy(h, &std_object_handlers, sizeof(zend_object_handlers));
 
-  INIT_CLASS_ENTRY(tmp_ce, "Google\\Protobuf\\Internal\\DescriptorPool",
+  INIT_CLASS_ENTRY(tmp_ce, "Google\\Protobuf\\DescriptorPool",
                    DescriptorPool_methods);
   DescriptorPool_class_entry = zend_register_internal_class(&tmp_ce);
   DescriptorPool_class_entry->ce_flags |= ZEND_ACC_FINAL;
@@ -1056,6 +1116,10 @@ void Def_ModuleInit() {
   h = &DescriptorPool_object_handlers;
   memcpy(h, &std_object_handlers, sizeof(zend_object_handlers));
   h->dtor_obj = DescriptorPool_destructor;
+
+  INIT_CLASS_ENTRY(tmp_ce, "Google\\Protobuf\\Internal\\DescriptorPool",
+                   InternalDescriptorPool_methods);
+  InternalDescriptorPool_class_entry = zend_register_internal_class(&tmp_ce);
 
   // GPBType.
 #define STR(str) (str), strlen(str)
